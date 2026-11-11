@@ -38,8 +38,7 @@ java.sourceSets["main"].resources {
 
 tasks {
     withType<JavaCompile> {
-        sourceCompatibility = "11"
-        targetCompatibility = "11"
+        options.release.set(11)
     }
 
     named<ComposedJarTask>("composedJar") {
