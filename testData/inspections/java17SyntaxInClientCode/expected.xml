@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<problems>
+  <problem>
+    <file>Java17Syntax.java</file>
+    <line>3</line>
+    <description>Class 'java.time.LocalDate' is not present in JRE Emulation Library so it cannot be used in client code of 'MyModule' GWT module</description>
+  </problem>
+  <problem>
+    <file>Java17Syntax.java</file>
+    <line>3</line>
+    <description>Class 'java.time.LocalDate' is not present in JRE Emulation Library so it cannot be used in client code of 'MyModule' GWT module</description>
+  </problem>
+  <problem>
+    <file>Java17Syntax.java</file>
+    <line>11</line>
+    <description>Class 'java.time.LocalDate' is not present in JRE Emulation Library so it cannot be used in client code of 'MyModule' GWT module</description>
+  </problem>
+  <problem>
+    <file>Java17Syntax.java</file>
+    <line>14</line>
+    <description>Class 'java.time.LocalDate' is not present in JRE Emulation Library so it cannot be used in client code of 'MyModule' GWT module</description>
+  </problem>
+</problems>
