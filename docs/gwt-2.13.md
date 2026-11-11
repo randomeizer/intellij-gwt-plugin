@@ -20,12 +20,17 @@ With GWT 2.13, the run configuration's **Default** server serves static files. I
 `web.xml` servlets or GWT RPC endpoints. Projects with a Java backend must choose a servlet
 container or run their backend separately.
 
-To use the bundled legacy Jetty 9 launcher, add this to the GWT run configuration's DevMode
-parameters:
+To use the bundled legacy Jetty 9 launcher, choose **Legacy Jetty 9 (servlets, deprecated)**
+in the GWT run configuration's **Server** selector. The selection is saved with the run
+configuration and adds this DevMode argument:
 
 ```text
 -server com.google.gwt.dev.shell.jetty.JettyLauncher
 ```
+
+An explicit `-server` or `-noserver` in DevMode parameters takes precedence over the selector,
+so the plugin adds no duplicate or conflicting server argument. **Default** continues to use the
+SDK default without adding an override.
 
 This launcher is deprecated and scheduled for removal by GWT. For an external backend, use
 `-noserver`, start the backend separately, and configure the run page to point to it. A custom
