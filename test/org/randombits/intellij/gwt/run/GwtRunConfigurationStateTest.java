@@ -2,11 +2,23 @@ package org.randombits.intellij.gwt.run;
 
 import org.randombits.intellij.gwt.run.GwtRunConfiguration.GwtRunConfigurationState;
 import junit.framework.TestCase;
+import com.intellij.util.xmlb.XmlSerializer;
 
 import java.util.Arrays;
 import java.util.List;
 
 public class GwtRunConfigurationStateTest extends TestCase {
+
+  public void testDefaultServerRemainsUnchanged() {
+    assertEquals(DefaultDevModeServer.SERVER_ID, new GwtRunConfigurationState().SERVER_ID);
+  }
+
+  public void testLegacyJettySelectionRoundTrip() {
+    GwtRunConfigurationState state = new GwtRunConfigurationState();
+    state.SERVER_ID = LegacyJettyDevModeServer.SERVER_ID;
+    GwtRunConfigurationState restored = XmlSerializer.deserialize(XmlSerializer.serialize(state), GwtRunConfigurationState.class);
+    assertEquals(LegacyJettyDevModeServer.SERVER_ID, restored.SERVER_ID);
+  }
 
   public void testGwtModules() {
     GwtRunConfigurationState state = new GwtRunConfigurationState();
