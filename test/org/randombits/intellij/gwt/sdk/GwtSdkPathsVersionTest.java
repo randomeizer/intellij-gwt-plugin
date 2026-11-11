@@ -13,19 +13,23 @@ import java.util.List;
 import java.util.Set;
 
 public class GwtSdkPathsVersionTest extends TestCase {
-  private static final String GWT_VERSION = "2.12.2";
+  private static final List<String> GWT_VERSIONS = List.of("2.12.2", "2.13.0", "2.13.1");
 
   public void testMavenSdkPathsResolveGwtProjectCoordinates() {
-    assertGwtProjectCoordinates(new GwtMavenSdkPaths(
-      "/m2/repository/org/gwtproject/gwt-dev/" + GWT_VERSION, GWT_VERSION));
+    for (String version : GWT_VERSIONS) {
+      assertGwtProjectCoordinates(new GwtMavenSdkPaths(
+        "/m2/repository/org/gwtproject/gwt-dev/" + version, version), version);
+    }
   }
 
   public void testGradleSdkPathsResolveGwtProjectCoordinates() {
-    assertGwtProjectCoordinates(new GwtGradleSdkPaths(
-      "/gradle/caches/modules-2/files-2.1/org.gwtproject/gwt-dev/" + GWT_VERSION, GWT_VERSION));
+    for (String version : GWT_VERSIONS) {
+      assertGwtProjectCoordinates(new GwtGradleSdkPaths(
+        "/gradle/caches/modules-2/files-2.1/org.gwtproject/gwt-dev/" + version, version), version);
+    }
   }
 
-  private void assertGwtProjectCoordinates(GwtSdkPaths paths) {
+  private void assertGwtProjectCoordinates(GwtSdkPaths paths, String version) {
     Set<String> resolvedArtifactIds = new HashSet<>();
     GwtDependenciesResolver resolver = new GwtDependenciesResolver() {
       @Override
@@ -37,8 +41,8 @@ public class GwtSdkPathsVersionTest extends TestCase {
       @Override
       public List<String> resolveAnyOf(Collection<MavenCoordinates> alternatives) {
         String artifactId = alternatives.iterator().next().artifactId;
-        assertTrue(hasCoordinate(alternatives, GwtSdkPaths.NEW_GROUP_ID, artifactId));
-        assertTrue(hasCoordinate(alternatives, GwtSdkPaths.OLD_GROUP_ID, artifactId));
+        assertTrue(hasCoordinate(alternatives, GwtSdkPaths.NEW_GROUP_ID, artifactId, version));
+        assertTrue(hasCoordinate(alternatives, GwtSdkPaths.OLD_GROUP_ID, artifactId, version));
         resolvedArtifactIds.add(artifactId);
         return List.of("resolved-from-org.gwtproject");
       }
@@ -49,9 +53,9 @@ public class GwtSdkPathsVersionTest extends TestCase {
     assertEquals(Set.of(GwtSdkPaths.GWT_USER_ARTIFACT_ID, GwtSdkPaths.GWT_DEV_ARTIFACT_ID), resolvedArtifactIds);
   }
 
-  private static boolean hasCoordinate(Collection<MavenCoordinates> coordinates, String groupId, String artifactId) {
+  private static boolean hasCoordinate(Collection<MavenCoordinates> coordinates, String groupId, String artifactId, String version) {
     return coordinates.stream().anyMatch(coordinate -> groupId.equals(coordinate.groupId)
                                                         && artifactId.equals(coordinate.artifactId)
-                                                        && GWT_VERSION.equals(coordinate.version));
+                                                        && version.equals(coordinate.version));
   }
 }

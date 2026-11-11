@@ -79,6 +79,9 @@ public final class GwtVersionDetector {
   }
 
   public static GwtVersionImpl getGwtVersionFromString(String version) {
+      if (compare(version, "2.13.snapshot") >= 0) {
+        return GwtVersionImpl.VERSION_2_13;
+      }
       if (compare(version, "2.12.snapshot") >= 0) {
         return GwtVersionImpl.VERSION_2_12;
       }

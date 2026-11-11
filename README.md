@@ -19,6 +19,9 @@ The current build targets IntelliJ IDEA 2026.3 (build 263) and uses Java 25.
 
 The distributable ZIP is written to `build/distributions/`.
 
+For GWT 2.13 SDK support, runtime requirements, and the changed DevMode server default, see
+[GWT 2.13 compatibility](docs/gwt-2.13.md).
+
 ## Continuous integration and releases
 
 GitHub Actions runs `./gradlew check buildPlugin` for pull requests and pushes to `main`, using
