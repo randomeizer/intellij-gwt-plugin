@@ -1,6 +1,7 @@
 package org.randombits.intellij.gwt.sdk;
 
 import org.randombits.intellij.gwt.sdk.impl.GwtVersionDetector;
+import org.randombits.intellij.gwt.sdk.impl.GwtVersionImpl;
 import com.intellij.pom.java.LanguageLevel;
 import junit.framework.TestCase;
 
@@ -14,6 +15,7 @@ import static org.randombits.intellij.gwt.sdk.impl.GwtVersionImpl.VERSION_2_8;
 import static org.randombits.intellij.gwt.sdk.impl.GwtVersionImpl.VERSION_2_9;
 import static org.randombits.intellij.gwt.sdk.impl.GwtVersionImpl.VERSION_2_10;
 import static org.randombits.intellij.gwt.sdk.impl.GwtVersionImpl.VERSION_2_11;
+import static org.randombits.intellij.gwt.sdk.impl.GwtVersionImpl.VERSION_2_12;
 
 public class GwtVersionTest extends TestCase {
 
@@ -40,8 +42,9 @@ public class GwtVersionTest extends TestCase {
   }
 
   public void testHighestSupportedLanguageLevel() {
-    // GWT 2.10 requires/supports Java 11 and 2.11 supports Java 17, so the facet must not cap the language
-    // level at Java 8 for those versions (IDEA-383876, IDEA-283112).
+    // GWT 2.10 supports Java 11; GWT 2.11 and 2.12 support Java 17 language features.
+    // The facet must not cap those versions at Java 8 (IDEA-383876, IDEA-283112).
+    assertEquals(LanguageLevel.JDK_17, VERSION_2_12.getHighestSupportedLanguageLevel());
     assertEquals(LanguageLevel.JDK_17, VERSION_2_11.getHighestSupportedLanguageLevel());
     assertEquals(LanguageLevel.JDK_11, VERSION_2_10.getHighestSupportedLanguageLevel());
     assertEquals(LanguageLevel.JDK_1_8, VERSION_2_9.getHighestSupportedLanguageLevel());
@@ -57,5 +60,22 @@ public class GwtVersionTest extends TestCase {
     assertEquals(VERSION_2_9, GwtVersionDetector.getGwtVersionFromString("2.9.0"));
     assertEquals(VERSION_2_10, GwtVersionDetector.getGwtVersionFromString("2.10.0"));
     assertEquals(VERSION_2_11, GwtVersionDetector.getGwtVersionFromString("2.11.0"));
+    assertEquals(VERSION_2_12, GwtVersionDetector.getGwtVersionFromString("2.12.0"));
+    assertEquals(VERSION_2_12, GwtVersionDetector.getGwtVersionFromString("2.12.1"));
+    assertEquals(VERSION_2_12, GwtVersionDetector.getGwtVersionFromString("2.12.2"));
+    // Until the next explicit profile is added, newer SDKs use the newest known profile.
+    assertEquals(VERSION_2_12, GwtVersionDetector.getGwtVersionFromString("2.13.1"));
+  }
+
+  public void testGwt212UsesLatestKnownCompilerAndDevModeEntrypoints() {
+    assertSame(GwtVersionImpl.LATEST, VERSION_2_12);
+    assertEquals(VERSION_2_11.getCompilerClassName(), VERSION_2_12.getCompilerClassName());
+    assertEquals(VERSION_2_11.getDevModeClass(), VERSION_2_12.getDevModeClass());
+  }
+
+  public void testGwt212ModuleDoctypeMatchesSdkGenerator() {
+    assertEquals("<!DOCTYPE module PUBLIC \"-//Google Inc.//DTD Google Web Toolkit 2.12.2//EN\" " +
+                 "\"http://gwtproject.org/doctype/2.12.2/gwt-module.dtd\">",
+                 VERSION_2_12.getGwtModuleDocTypeString());
   }
 }
