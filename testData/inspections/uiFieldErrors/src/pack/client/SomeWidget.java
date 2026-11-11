@@ -29,6 +29,11 @@ public class SomeWidget extends BaseWidget {
 
   @UiField Element elementWithoutSpecialClass;
 
+  @UiField CustomJsElement customElement;
+  @UiField UnannotatedElement unannotatedElement;
+  @UiField(provided = true) CustomJsElement providedElement;
+  @UiField CustomJsElement wrongWidget;
+
   public SomeWidget() {
     myElement = myBinder.createAndBindUi(this);
     nameSpan.setInnerText("World");
