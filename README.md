@@ -19,6 +19,33 @@ The current build targets IntelliJ IDEA 2026.3 (build 263) and uses Java 25.
 
 The distributable ZIP is written to `build/distributions/`.
 
+## Continuous integration and releases
+
+GitHub Actions runs `./gradlew check buildPlugin` for pull requests and pushes to `main`, using
+Java 25. Successful `main` builds upload the plugin ZIP as the `latest-main-build` workflow
+artifact; pull requests do not publish artifacts. This is event-driven rather than nightly: it
+tracks the most recent successful build of changed `main` code. Workflow artifacts expire based on
+the repository's Actions retention setting (GitHub's default is 90 days).
+
+The plugin version is managed by Gradle in `gradle.properties` as `pluginVersion`. The root build
+uses it as the project version and requires a matching `change-notes/<pluginVersion>.html` file.
+To prepare a release, update both in a pull request and merge it. The release tag must be
+`v<pluginVersion>`; for example, the current version can be checked and packaged with:
+
+```shell
+./gradlew verifyReleaseTag check buildPlugin -PreleaseTag=v263.0.0
+```
+
+After merging, push an annotated tag for that version (for example,
+`git tag -a v263.0.0 -m "Release v263.0.0"` followed by `git push origin v263.0.0`). The tag
+triggers the release workflow, which repeats the Gradle version check and build, creates a draft
+GitHub Release with the plugin ZIP and versioned change notes, then publishes it. Gradle manages
+the version check and plugin package; GitHub Actions/CLI creates the GitHub Release.
+
+The workflows need no repository secrets: the release job uses the automatically provided
+`GITHUB_TOKEN` with `contents: write`, while other jobs are read-only. Enabling immutable releases
+in repository settings is recommended; the release workflow attaches files before publishing.
+
 ## License and contributions
 
 The source is licensed under the Apache License 2.0; see [LICENSE.txt](LICENSE.txt). Existing
