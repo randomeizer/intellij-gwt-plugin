@@ -16,7 +16,7 @@ class GwtFacetImporterUtil {
                                     repos: List<MavenRemoteRepository>): Collection<MavenArtifact> {
       val oldGroupArtifact = MavenArtifactInfo(GwtSdkPaths.OLD_GROUP_ID, artifactId, gwtVersion, "jar", classifier)
       val newGroupArtifact = MavenArtifactInfo(GwtSdkPaths.NEW_GROUP_ID, artifactId, gwtVersion, "jar", classifier)
-      return embedder.resolveArtifactTransitively(listOf(oldGroupArtifact, newGroupArtifact), repos).mavenResolvedArtifacts
+      return embedder.resolveArtifactsTransitively(listOf(oldGroupArtifact, newGroupArtifact), repos).mavenResolvedArtifacts
     }
   }
 }
