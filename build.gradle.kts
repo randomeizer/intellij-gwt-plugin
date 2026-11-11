@@ -111,6 +111,24 @@ intellijPlatform {
     }
 }
 
+tasks.register("verifyReleaseTag") {
+    group = "verification"
+    description = "Checks that the supplied release tag matches the current plugin version."
+
+    val actualTag = providers.gradleProperty("releaseTag").orNull
+    val expectedTag = "v$pluginVersion"
+    inputs.property("releaseTag", actualTag ?: "")
+
+    doLast {
+        if (actualTag == null) {
+            throw GradleException("Pass -PreleaseTag=$expectedTag to validate a release tag.")
+        }
+        if (actualTag != expectedTag) {
+            throw GradleException("Release tag '$actualTag' does not match the expected tag '$expectedTag'.")
+        }
+    }
+}
+
 tasks {
     withType<JavaCompile> {
         sourceCompatibility = properties("platformJavaVersion")

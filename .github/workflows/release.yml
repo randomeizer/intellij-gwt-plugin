@@ -1,0 +1,64 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out tagged source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Java
+        uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+
+      - name: Validate version, test, and build plugin
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: ./gradlew verifyReleaseTag check buildPlugin "-PreleaseTag=${RELEASE_TAG}"
+
+      - name: Create and publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          shopt -s nullglob
+          assets=(build/distributions/*.zip)
+          if (( ${#assets[@]} != 1 )); then
+            printf 'Expected exactly one plugin ZIP, found %s.\n' "${#assets[@]}" >&2
+            exit 1
+          fi
+
+          version="${RELEASE_TAG#v}"
+          notes_file="change-notes/${version}.html"
+          if [[ ! -f "$notes_file" ]]; then
+            printf 'Missing release notes: %s\n' "$notes_file" >&2
+            exit 1
+          fi
+
+          gh release create "$RELEASE_TAG" "${assets[0]}" \
+            --draft \
+            --verify-tag \
+            --title "Randombits GWT Support $RELEASE_TAG" \
+            --notes-file "$notes_file"
+          gh release edit "$RELEASE_TAG" --draft=false
