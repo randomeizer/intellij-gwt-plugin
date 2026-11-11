@@ -14,6 +14,7 @@ import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
 import com.intellij.util.ui.UIUtil;
 import org.randombits.intellij.gwt.facet.GwtFacet;
 import org.randombits.intellij.gwt.facet.GwtFacetEditor;
+import org.randombits.intellij.gwt.facet.GwtFacetArtifactValidator;
 import org.randombits.intellij.gwt.junit.GwtJUnitPatcher;
 import org.randombits.intellij.gwt.make.GwtCompilerPaths;
 import org.randombits.intellij.gwt.module.GwtModulesManager;
@@ -24,6 +25,8 @@ import javax.swing.JComponent;
 import javax.swing.JTable;
 import java.awt.Component;
 import java.lang.reflect.Proxy;
+import java.util.ArrayList;
+import java.util.List;
 
 /** Exercise Web-independent integrations in both the full and free IDEA runtimes. */
 public class GwtCoreIntegrationTest extends LightJavaCodeInsightFixtureTestCase {
@@ -67,13 +70,17 @@ public class GwtCoreIntegrationTest extends LightJavaCodeInsightFixtureTestCase 
     configuration.setPackagingRelativePath("sample.App", "custom-output");
     if (!GwtWebUtil.isWebSupportAvailable()) configuration.setWebFacetName("existing-web");
 
+    List<FacetEditorValidator> validators = new ArrayList<>();
     GwtFacetEditor editor = new GwtFacetEditor(editorContext(), new FacetValidatorsManager() {
       @Override
-      public void registerValidator(FacetEditorValidator validator, JComponent... components) {}
+      public void registerValidator(FacetEditorValidator validator, JComponent... components) {
+        validators.add(validator);
+      }
       @Override
       public void validate() {}
     }, configuration);
     try {
+      assertTrue("Core output validation must be registered", validators.stream().anyMatch(GwtFacetArtifactValidator.class::isInstance));
       editor.reset();
       JComponent component = editor.createComponent();
       JTable table = UIUtil.findComponentOfType(component, JTable.class);
@@ -81,12 +88,15 @@ public class GwtCoreIntegrationTest extends LightJavaCodeInsightFixtureTestCase 
       for (Component ancestor = table; ancestor != null; ancestor = ancestor.getParent()) {
         assertTrue("Compilation controls are hidden by " + ancestor.getClass().getSimpleName(), ancestor.isVisible());
       }
-      assertEquals(GwtWebUtil.isWebSupportAvailable() ? 3 : 2, table.getColumnCount());
+      assertEquals(3, table.getColumnCount());
       assertEquals(1, table.getRowCount());
       assertEquals("sample.App", table.getValueAt(0, 1));
       assertEquals(Boolean.FALSE, table.getValueAt(0, 0));
       assertTrue(table.isCellEditable(0, 0));
       table.setValueAt(Boolean.TRUE, 0, 0);
+      assertEquals("custom-output", table.getValueAt(0, 2));
+      assertTrue(table.isCellEditable(0, 2));
+      table.setValueAt("edited-output", 0, 2);
       assertTrue(editor.isModified());
       editor.apply();
 
@@ -95,7 +105,7 @@ public class GwtCoreIntegrationTest extends LightJavaCodeInsightFixtureTestCase 
       var module = GwtModulesManager.getInstance(getProject()).getGwtModule(file);
       assertNotNull(module);
       assertTrue(configuration.isModuleCompilationEnabled(module));
-      assertEquals("custom-output", configuration.getPackagingRelativePath(module));
+      assertEquals("edited-output", configuration.getPackagingRelativePath(module));
       if (!GwtWebUtil.isWebSupportAvailable()) assertEquals("existing-web", configuration.getWebFacetName());
     }
     finally {

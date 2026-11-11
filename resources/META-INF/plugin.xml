@@ -10,7 +10,7 @@
       Older standalone Community Edition versions are outside the supported build range.</p>
       <p><b>Available without an Ultimate subscription:</b></p>
       <ul>
-        <li>GWT facets and module XML, SDK management, and compiler integration.</li>
+        <li>GWT facets and module XML, SDK management, compiler integration, and plain compiler-output artifact import, validation, and setup quick fixes.</li>
         <li>Java/RPC inspections, completion, navigation, refactoring, UiBinder, ClientBundle, and JSNI coding assistance.</li>
         <li>Creation of GWT components and Maven/Gradle import. Applications can be run through Maven goals or Gradle tasks.</li>
       </ul>

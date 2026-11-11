@@ -12,7 +12,9 @@ import com.intellij.facet.Facet;
 import com.intellij.facet.FacetManager;
 import com.intellij.facet.FacetModel;
 import com.intellij.facet.ui.FacetEditorContext;
-import com.intellij.facet.ui.FacetEditorValidator;
+import com.intellij.facet.ui.ValidationResult;
+import com.intellij.packaging.artifacts.Artifact;
+import com.intellij.openapi.roots.ui.configuration.artifacts.ArtifactsStructureConfigurableContext;
 import com.intellij.javaee.web.WebDirectoryElement;
 import com.intellij.javaee.web.WebRoot;
 import com.intellij.javaee.web.WebUtil;
@@ -31,14 +33,13 @@ import com.intellij.psi.xml.XmlTag;
 import com.intellij.util.xml.DomUtil;
 import org.jetbrains.annotations.Nullable;
 import org.randombits.intellij.gwt.facet.GwtFacet;
-import org.randombits.intellij.gwt.facet.GwtFacetArtifactValidator;
-import org.randombits.intellij.gwt.facet.GwtFacetEditor;
 import org.randombits.intellij.gwt.module.model.GwtModule;
 
 import javax.swing.Icon;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Collection;
 
 /** Loaded only by gwt-web-support.xml, never by the base plugin in free mode. */
 public final class GwtWebSupportImpl implements GwtWebSupport {
@@ -73,8 +74,14 @@ public final class GwtWebSupportImpl implements GwtWebSupport {
   }
 
   @Override
-  public FacetEditorValidator createArtifactValidator(GwtFacet facet, FacetEditorContext context, GwtFacetEditor editor) {
-    return new GwtFacetArtifactValidator(facet, context, editor);
+  public ValidationResult checkArtifact(GwtFacet facet, Artifact artifact, ArtifactsStructureConfigurableContext context) {
+    return GwtWebArtifactSupport.checkArtifact(facet, artifact, context);
+  }
+
+  @Override
+  public Collection<? extends Artifact> getSuitableArtifacts(GwtFacet facet, @Nullable String webFacetName,
+                                                           ArtifactsStructureConfigurableContext context) {
+    return GwtWebArtifactSupport.getSuitableArtifacts(facet, webFacetName, context);
   }
 
   @Override

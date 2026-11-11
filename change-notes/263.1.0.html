@@ -8,6 +8,7 @@
     </ul>
   </li>
   <li>Preserved existing Web facet associations when editing without Web/Servlets support, and added separate automated free-mode and full-integration runtime checks.</li>
-  <li>Kept per-module compilation controls and GWT JUnit classpath/argument setup available in free mode; only Web output-path controls and test web.xml copying require Web/Servlets support.</li>
+  <li>Kept per-module compilation controls, relative output-path settings, and GWT JUnit classpath/argument setup available in free mode; Web facet association and test web.xml copying remain conditional on Web/Servlets support.</li>
+  <li>Restored Maven plain compiler-output artifact setup and enabled generic output-artifact validation and setup quick fixes in free mode. WAR selection and servlet-JAR checks remain conditional on Web/Servlets support.</li>
   <li>The minimum supported IDE build remains 263; older standalone Community Edition versions are not supported.</li>
 </ul>

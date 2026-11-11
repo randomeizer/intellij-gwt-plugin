@@ -14,7 +14,8 @@ support channel.
 The current build targets IntelliJ IDEA 2026.3 (build 263) and uses Java 25.
 
 Free mode supports GWT facets and module XML, Java/RPC inspections, UiBinder, ClientBundle,
-JSNI, SDK discovery, Maven/Gradle import, and compiler integration. JavaScript, CSS, Java
+JSNI, SDK discovery, Maven/Gradle import, compiler integration, and plain compiler-output artifact
+import, validation, and setup quick fixes. JavaScript, CSS, Java
 internationalization, and the bundled Jakarta EE platform API module must remain enabled.
 
 The following integrations require an **Ultimate subscription** and their corresponding bundled

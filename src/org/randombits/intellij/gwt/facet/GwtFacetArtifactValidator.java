@@ -1,73 +1,55 @@
 package org.randombits.intellij.gwt.facet;
 
-import org.randombits.intellij.gwt.web.GwtWebServletUtil;
-import com.intellij.facet.impl.ui.FacetEditorContextBase;
+import org.randombits.intellij.gwt.web.GwtWebSupport;
 import com.intellij.facet.ui.FacetConfigurationQuickFix;
-import com.intellij.facet.ui.FacetEditorContext;
 import com.intellij.facet.ui.FacetEditorValidator;
 import com.intellij.facet.ui.ValidationResult;
 import org.randombits.intellij.gwt.GwtBundle;
 import org.randombits.intellij.gwt.packaging.GwtCompileOutputRelativePathSuggester;
 import org.randombits.intellij.gwt.packaging.GwtCompilerOutputElement;
 import org.randombits.intellij.gwt.packaging.GwtCompilerOutputElementType;
-import org.randombits.intellij.gwt.sdk.GwtSdk;
-import com.intellij.javaee.artifact.JavaeeArtifactUtil;
-import com.intellij.javaee.web.artifact.WebArtifactUtil;
-import com.intellij.javaee.web.facet.WebFacet;
 import com.intellij.openapi.roots.ui.configuration.ProjectStructureConfigurable;
 import com.intellij.openapi.roots.ui.configuration.artifacts.ArtifactEditorEx;
 import com.intellij.openapi.roots.ui.configuration.artifacts.ArtifactsStructureConfigurableContext;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.openapi.ui.popup.PopupStep;
 import com.intellij.openapi.ui.popup.util.BaseListPopupStep;
-import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.packaging.artifacts.Artifact;
 import com.intellij.packaging.artifacts.ArtifactManager;
-import com.intellij.packaging.artifacts.ArtifactType;
 import com.intellij.packaging.artifacts.ModifiableArtifact;
-import com.intellij.packaging.elements.CompositePackagingElement;
-import com.intellij.packaging.elements.PackagingElement;
 import com.intellij.packaging.elements.PackagingElementFactory;
 import com.intellij.packaging.impl.artifacts.ArtifactUtil;
-import com.intellij.packaging.impl.artifacts.PackagingElementPath;
-import com.intellij.packaging.impl.artifacts.PackagingElementProcessor;
 import com.intellij.packaging.impl.artifacts.PlainArtifactType;
-import com.intellij.packaging.impl.elements.FileCopyPackagingElement;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.Icon;
 import javax.swing.JComponent;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Supplier;
 
 public class GwtFacetArtifactValidator extends FacetEditorValidator {
   private final GwtFacet myFacet;
-  private final FacetEditorContext myEditorContext;
-  private final GwtFacetEditor myGwtFacetEditor;
+  private final Supplier<ArtifactsStructureConfigurableContext> myArtifactsContext;
+  private final Supplier<String> mySelectedWebFacet;
 
-  public GwtFacetArtifactValidator(GwtFacet facet, FacetEditorContext editorContext, GwtFacetEditor gwtFacetEditor) {
+  public GwtFacetArtifactValidator(GwtFacet facet, Supplier<ArtifactsStructureConfigurableContext> artifactsContext,
+                                   Supplier<String> selectedWebFacet) {
     myFacet = facet;
-    myEditorContext = editorContext;
-    myGwtFacetEditor = gwtFacetEditor;
+    myArtifactsContext = artifactsContext;
+    mySelectedWebFacet = selectedWebFacet;
   }
 
   @Override
   public @NotNull ValidationResult check() {
-    final ArtifactsStructureConfigurableContext artifactsContext = ((FacetEditorContextBase)myEditorContext).getArtifactsStructureContext();
+    final ArtifactsStructureConfigurableContext artifactsContext = myArtifactsContext.get();
     for (Artifact artifact : artifactsContext.getArtifactModel().getArtifacts()) {
       if (!ArtifactUtil.processPackagingElements(artifact, GwtCompilerOutputElementType.getInstance(),
                                                  element -> !myFacet.equals(element.getFacet()), artifactsContext, false)) {
-        final ArtifactType artifactType = artifact.getArtifactType();
-        if (WebArtifactUtil.getInstance().isWebApplication(artifactType) && !containsServletJar(artifactsContext, artifact, artifactType)
-            && GwtWebServletUtil.hasServlets(myFacet)) {
-          return new ValidationResult(
-            GwtBundle.message("validation.result.gwt.servlet.jar.is.not.included.in.0.artifact", artifact.getName()),
-            new IncludeGwtServletJarQuickFix(artifact, artifactsContext));
-        }
-        return ValidationResult.OK;
+        GwtWebSupport webSupport = GwtWebSupport.getInstance();
+        return webSupport == null ? ValidationResult.OK : webSupport.checkArtifact(myFacet, artifact, artifactsContext);
       }
     }
 
@@ -117,26 +99,6 @@ public class GwtFacetArtifactValidator extends FacetEditorValidator {
     return new ValidationResult(GwtBundle.message("validation.result.gwt.compiler.output.is.not.included.in.an.artifact"), fix);
   }
 
-  private boolean containsServletJar(ArtifactsStructureConfigurableContext artifactsContext, Artifact artifact, ArtifactType artifactType) {
-    final GwtSdk sdk = myFacet.getConfiguration().getSdk();
-    if (!new File(sdk.getServletJarPath()).exists()) {
-      return true;
-    }
-
-    final String servletJarPath = FileUtil.toSystemIndependentName(sdk.getServletJarPath());
-    return !ArtifactUtil.processDirectoryChildren(artifact.getRootElement(), PackagingElementPath.EMPTY, "/WEB-INF/lib", artifactsContext,
-                                          artifactType, new PackagingElementProcessor<>() {
-        @Override
-        public boolean process(@NotNull PackagingElement<?> element, @NotNull PackagingElementPath path) {
-          if (element instanceof FileCopyPackagingElement &&
-              FileUtil.pathsEqual(FileUtil.toSystemIndependentName(((FileCopyPackagingElement)element).getFilePath()), servletJarPath)) {
-            return false;
-          }
-          return true;
-        }
-      });
-  }
-
   private void createArtifact(ArtifactsStructureConfigurableContext artifactsContext) {
     final String artifactName = suggestArtifactName(myFacet.getModule().getName());
     final ModifiableArtifact artifact = artifactsContext.getOrCreateModifiableArtifactModel().addArtifact(artifactName, PlainArtifactType.getInstance());
@@ -157,19 +119,13 @@ public class GwtFacetArtifactValidator extends FacetEditorValidator {
     ProjectStructureConfigurable.getInstance(artifactsContext.getProject()).select(artifact, true);
   }
 
-  private Collection<? extends Artifact> getSuitableArtifacts(ArtifactsStructureConfigurableContext artifactsContext) {
-    final String webFacetName = myGwtFacetEditor.getSelectedWebFacet();
-    if (webFacetName != null) {
-      final WebFacet webFacet = artifactsContext.getModulesProvider().getFacetModel(myFacet.getModule()).findFacet(WebFacet.ID, webFacetName);
-      if (webFacet != null) {
-        final Collection<Artifact> artifacts = JavaeeArtifactUtil.getInstance().getArtifactsContainingFacet(webFacet, artifactsContext,
-                                                                                                            WebArtifactUtil.getInstance().getWebArtifactTypes(), false);
-        if (!artifacts.isEmpty()) {
-          return artifacts;
-        }
-      }
+  private Collection<? extends Artifact> getSuitableArtifacts(ArtifactsStructureConfigurableContext context) {
+    GwtWebSupport webSupport = GwtWebSupport.getInstance();
+    if (webSupport != null) {
+      Collection<? extends Artifact> webArtifacts = webSupport.getSuitableArtifacts(myFacet, mySelectedWebFacet.get(), context);
+      if (!webArtifacts.isEmpty()) return webArtifacts;
     }
-    return artifactsContext.getArtifactModel().getArtifactsByType(WebArtifactUtil.getInstance().getExplodedWarArtifactType());
+    return context.getArtifactModel().getArtifactsByType(PlainArtifactType.getInstance());
   }
 
   private class MySelectArtifactPopupStep extends BaseListPopupStep<Artifact> {
@@ -197,22 +153,4 @@ public class GwtFacetArtifactValidator extends FacetEditorValidator {
     }
   }
 
-  private class IncludeGwtServletJarQuickFix extends FacetConfigurationQuickFix {
-    private final Artifact myArtifact;
-    private final ArtifactsStructureConfigurableContext myArtifactsContext;
-
-    IncludeGwtServletJarQuickFix(Artifact artifact, ArtifactsStructureConfigurableContext artifactsContext) {
-      myArtifact = artifact;
-      myArtifactsContext = artifactsContext;
-    }
-
-    @Override
-    public void run(JComponent place) {
-      myArtifactsContext.editLayout(myArtifact, () -> {
-        final CompositePackagingElement<?> root = myArtifactsContext.getRootElement(myArtifact);
-        PackagingElementFactory.getInstance().addFileCopy(root, "WEB-INF/lib", FileUtil.toSystemIndependentName(myFacet.getConfiguration().getSdk().getServletJarPath()));
-      });
-      ((ArtifactEditorEx)myArtifactsContext.getOrCreateEditor(myArtifact)).rebuildTries();
-    }
-  }
 }

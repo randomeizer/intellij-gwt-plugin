@@ -153,10 +153,9 @@ public abstract class GwtFacetImporter extends FacetImporter<GwtFacet, GwtFacetC
         setupGwtCompilerOptions(facet.getConfiguration(), module, project);
 
         GwtWebSupport webSupport = GwtWebSupport.getInstance();
-        if (webSupport != null) {
-          List<String> webRootUrls = webSupport.associateWebFacet(facet, modelsProvider1.getModifiableFacetModel(module));
-          addGwtCompilerOutputToArtifact(modelsProvider1, module, facet, project, webRootUrls);
-        }
+        List<String> webRootUrls = webSupport == null ? List.of()
+          : webSupport.associateWebFacet(facet, modelsProvider1.getModifiableFacetModel(module));
+        addGwtCompilerOutputToArtifact(modelsProvider1, module, facet, project, webRootUrls);
         WriteAction.run(() -> {
           modelsProvider1.commit();
         });
@@ -201,7 +200,7 @@ public abstract class GwtFacetImporter extends FacetImporter<GwtFacet, GwtFacetC
     PackagingModifiableModel packagingModel = modelsProvider.getModifiableModel(PackagingModifiableModel.class);
     final ModifiableArtifactModel artifactModel = packagingModel.getModifiableArtifactModel();
     final String artifactName = getArtifactName("war", module, true);
-    final Artifact webArtifact = artifactModel.findArtifact(artifactName);
+    final Artifact webArtifact = GwtWebSupport.getInstance() == null ? null : artifactModel.findArtifact(artifactName);
 
     String relativePath =
       GwtCompileOutputRelativePathSuggester.suggestRelativeOutputPath(facet, packagingModel.getPackagingElementResolvingContext());

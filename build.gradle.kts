@@ -163,6 +163,7 @@ intellijPlatformTesting.testIde.register("testFreeEdition") {
         filter {
             includeTestsMatching("org.randombits.intellij.gwt.GwtFreeEditionTest")
             includeTestsMatching("org.randombits.intellij.gwt.GwtCoreIntegrationTest")
+            includeTestsMatching("org.randombits.intellij.gwt.GwtArtifactIntegrationTest")
             includeTestsMatching("org.randombits.intellij.gwt.GwtAnnotationUtilTest")
             includeTestsMatching("org.randombits.intellij.gwt.model.GwtModuleTest")
             includeTestsMatching("org.randombits.intellij.gwt.model.GwtSourceTagTest")
