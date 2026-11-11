@@ -152,7 +152,7 @@ public final class GwtUiFieldErrorsInspection extends BaseGwtInspection {
           expectedType = fieldType;
           actualType = tagType;
         }
-        if (!TypeConversionUtil.isAssignable(expectedType, actualType)) {
+        if (!TypeConversionUtil.isAssignable(expectedType, actualType) && !isJsTypeDomField(field, fieldType, tag)) {
           LocalQuickFix fix = new SetCorrectUiFieldTypeFix(field, tagType);
           problems.add(manager.createProblemDescriptor(place, rangeInPlace, GwtBundle
                                                          .message("problem.descriptor.description.template.expected.0.but.1.found", expectedType.getCanonicalText(),
@@ -161,6 +161,14 @@ public final class GwtUiFieldErrorsInspection extends BaseGwtInspection {
         }
       }
     }
+  }
+
+  // UiBinder casts directly annotated JsType owner fields when binding DOM elements.
+  private static boolean isJsTypeDomField(PsiField field, PsiType fieldType, XmlTag tag) {
+    if (UiBinderUtil.isProvidedUiField(field) || !field.getType().equals(fieldType) || tag.getNamespace().startsWith("urn:")) return false;
+    if (!(fieldType instanceof PsiClassType classType)) return false;
+    PsiClass fieldClass = classType.resolve();
+    return fieldClass != null && fieldClass.hasAnnotation("jsinterop.annotations.JsType");
   }
 
   private static final class SetCorrectUiFieldTypeFix extends BaseGwtLocalQuickFixOnPsiElement {
