@@ -6,7 +6,6 @@
   <extensions defaultExtensionNs="com.intellij">
     <applicationService serviceInterface="org.randombits.intellij.gwt.web.GwtWebSupport"
                         serviceImplementation="org.randombits.intellij.gwt.web.GwtWebSupportImpl"/>
-    <junitPatcher implementation="org.randombits.intellij.gwt.junit.GwtJUnitPatcher"/>
     <localInspection shortName="RandombitsGwtServiceNotRegistered"
                      key="inspection.name.gwt.remote.service.is.not.registered.in.web.xml" groupKey="group.gwt.inspections.name"
                      enabledByDefault="true" level="ERROR"

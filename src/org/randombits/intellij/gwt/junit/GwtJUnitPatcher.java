@@ -16,7 +16,7 @@
 
 package org.randombits.intellij.gwt.junit;
 
-import org.randombits.intellij.gwt.web.GwtWebSupportImpl;
+import org.randombits.intellij.gwt.web.GwtWebSupport;
 import com.intellij.execution.JUnitPatcher;
 import com.intellij.execution.configurations.JavaParameters;
 import com.intellij.execution.configurations.ParametersList;
@@ -29,21 +29,17 @@ import org.randombits.intellij.gwt.module.GwtModulesManager;
 import org.randombits.intellij.gwt.run.GwtClasspathUtil;
 import org.randombits.intellij.gwt.runtime.GwtTestsClassLoader;
 import org.randombits.intellij.gwt.sdk.GwtVersion;
-import com.intellij.javaee.web.facet.WebFacet;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.DumbModeBlockedFunctionality;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.psi.JavaPsiFacade;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.search.searches.ClassInheritorsSearch;
 import com.intellij.util.PathUtil;
 import com.intellij.util.PathsList;
-import com.intellij.util.descriptors.ConfigFile;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.Nullable;
 
@@ -139,19 +135,13 @@ public final class GwtJUnitPatcher extends JUnitPatcher {
     String testGenPath = GwtCompilerPaths.getTestGenDirectory(module).getAbsolutePath();
     String testOutputPath = GwtCompilerPaths.getTestOutputDirectory(module).getAbsolutePath();
     if (sdkVersion.isHostedModeRequiresWebXml() && !haveOutOption) {
-      final WebFacet webFacet = GwtWebSupportImpl.getWebFacet(facet);
-      if (webFacet != null) {
-        final ConfigFile webXmlDescriptor = webFacet.getWebXmlDescriptor();
-        if (webXmlDescriptor != null) {
-          File webXml = new File(FileUtil.toSystemDependentName(VfsUtilCore.urlToPath(webXmlDescriptor.getUrl())));
-          if (webXml.exists()) {
-            try {
-              FileUtil.copy(webXml, new File(testOutputPath, "WEB-INF" + File.separator + "web.xml"));
-            }
-            catch (IOException e) {
-              LOG.info(e);
-            }
-          }
+      GwtWebSupport webSupport = GwtWebSupport.getInstance();
+      if (webSupport != null) {
+        try {
+          webSupport.copyTestWebXml(facet, new File(testOutputPath));
+        }
+        catch (IOException e) {
+          LOG.info(e);
         }
       }
     }

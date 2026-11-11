@@ -20,6 +20,7 @@ import com.intellij.javaee.web.facet.WebFacet;
 import com.intellij.javaee.web.model.xml.WebApp;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiClass;
@@ -35,6 +36,8 @@ import org.randombits.intellij.gwt.facet.GwtFacetEditor;
 import org.randombits.intellij.gwt.module.model.GwtModule;
 
 import javax.swing.Icon;
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 /** Loaded only by gwt-web-support.xml, never by the base plugin in free mode. */
@@ -142,5 +145,14 @@ public final class GwtWebSupportImpl implements GwtWebSupport {
   @Override
   public List<String> getServletPaths(GwtModule module) {
     return GwtWebServletUtil.getAllGwtServletsPaths(module);
+  }
+
+  @Override
+  public void copyTestWebXml(GwtFacet facet, File outputDirectory) throws IOException {
+    WebFacet web = getWebFacet(facet);
+    var descriptor = web == null ? null : web.getWebXmlDescriptor();
+    if (descriptor == null) return;
+    File source = new File(FileUtil.toSystemDependentName(VfsUtilCore.urlToPath(descriptor.getUrl())));
+    if (source.exists()) FileUtil.copy(source, new File(outputDirectory, "WEB-INF" + File.separator + "web.xml"));
   }
 }

@@ -299,10 +299,10 @@ public class GwtFacetEditor extends FacetEditorTab {
     }
     else {
       myWebFacetBox.getParent().setVisible(false);
-      myPackagingPathsPanel.setVisible(false);
     }
 
-    final ColumnInfo[] columns = {ENABLED_COLUMN, MODULE_NAME_COLUMN, OUTPUT_PATH_COLUMN};
+    final ColumnInfo[] columns = webSupport == null ? new ColumnInfo[]{ENABLED_COLUMN, MODULE_NAME_COLUMN}
+                                                   : new ColumnInfo[]{ENABLED_COLUMN, MODULE_NAME_COLUMN, OUTPUT_PATH_COLUMN};
     myModulePackagingInfos = new ArrayList<>();
     myOriginalModulePackagingInfos = new ArrayList<>();
     myTableModel = new ListTableModel<>(columns, myModulePackagingInfos, 0);
@@ -320,7 +320,7 @@ public class GwtFacetEditor extends FacetEditorTab {
     });
     TableUtil.setupCheckboxColumn(column);
     columnModel.getColumn(1).setCellRenderer(new TableCellRendererWithTooltip());
-    columnModel.getColumn(2).setCellRenderer(new TableCellRendererWithTooltip());
+    if (webSupport != null) columnModel.getColumn(2).setCellRenderer(new TableCellRendererWithTooltip());
     myPackagingTablePanel.add(ScrollPaneFactory.createScrollPane(myTableView), BorderLayout.CENTER);
   }
 

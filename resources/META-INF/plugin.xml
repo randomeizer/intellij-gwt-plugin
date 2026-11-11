@@ -85,6 +85,7 @@
 
   <extensions defaultExtensionNs="com.intellij">
     <facetType implementation="org.randombits.intellij.gwt.facet.GwtFacetType"/>
+    <junitPatcher implementation="org.randombits.intellij.gwt.junit.GwtJUnitPatcher"/>
     <framework.detector implementation="org.randombits.intellij.gwt.facet.GwtFacetType$GwtFrameworkDetector"/>
     <packaging.elementType implementation="org.randombits.intellij.gwt.packaging.GwtCompilerOutputElementType"/>
     <packaging.elementType implementation="org.randombits.intellij.gwt.packaging.GwtCompilerDeployOutputElementType"/>

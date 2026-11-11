@@ -19,6 +19,8 @@ import org.randombits.intellij.gwt.facet.GwtFacetEditor;
 import org.randombits.intellij.gwt.module.model.GwtModule;
 
 import javax.swing.Icon;
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 /** Optional Web integration. Keep signatures limited to APIs available in free IDEA. */
@@ -40,4 +42,5 @@ public interface GwtWebSupport {
   void registerServlet(GwtFacet facet, GwtModule module, XmlFile moduleFile, PsiClass servlet, String name);
   @Nullable XmlTag findServletTag(GwtModule module, String path);
   List<String> getServletPaths(GwtModule module);
+  void copyTestWebXml(GwtFacet facet, File outputDirectory) throws IOException;
 }
