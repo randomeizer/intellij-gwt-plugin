@@ -16,6 +16,7 @@
 
 package org.randombits.intellij.gwt.actions;
 
+import org.randombits.intellij.gwt.web.GwtWebSupport;
 import org.randombits.intellij.gwt.GwtBundle;
 import org.randombits.intellij.gwt.facet.GwtFacet;
 import org.randombits.intellij.gwt.module.model.GwtModule;
@@ -25,9 +26,6 @@ import com.intellij.ide.highlighter.HtmlFileType;
 import com.intellij.ide.highlighter.JavaFileType;
 import com.intellij.ide.highlighter.XmlFileType;
 import com.intellij.ide.util.PackageUtil;
-import com.intellij.javaee.web.WebRoot;
-import com.intellij.javaee.web.WebUtil;
-import com.intellij.javaee.web.facet.WebFacet;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.util.text.StringUtil;
@@ -148,14 +146,10 @@ public class CreateGwtModuleAction extends GwtCreateActionBase {
       final String gwtModuleName = !appPackageName.isEmpty() ? appPackageName + "." + moduleName : moduleName;
       String gwtModuleHtml = version.getGwtModuleHtmlTemplate();
       String gwtModulePath = gwtModuleName;
-      if (version.isHtmlFilesOutsideSourcesAreAllowed()) {
-        final WebFacet webFacet = gwtFacet.getWebFacet();
-        if (webFacet != null) {
-          final WebRoot webRoot = WebUtil.findParentWebRoot(htmlDirectory.getVirtualFile(), webFacet.getWebRoots());
-          if (webRoot != null) {
-            gwtModulePath = gwtModuleName + "/" + gwtModuleName;//todo prepend with ../../.. path if needed?
-          }
-        }
+      GwtWebSupport webSupport = GwtWebSupport.getInstance();
+      if (version.isHtmlFilesOutsideSourcesAreAllowed() && webSupport != null &&
+          webSupport.isUnderWebRoot(gwtFacet, htmlDirectory.getVirtualFile())) {
+        gwtModulePath = gwtModuleName + "/" + gwtModuleName;
       }
       res.add(createFromTemplate(htmlDirectory, moduleName + "." + HtmlFileType.INSTANCE.getDefaultExtension(), HtmlFileType.INSTANCE, gwtModuleHtml,
                                  "GWT_MODULE_NAME", gwtModuleName,

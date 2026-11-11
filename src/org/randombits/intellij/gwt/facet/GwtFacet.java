@@ -29,7 +29,6 @@ import org.randombits.intellij.gwt.sdk.GwtSdkManager;
 import org.randombits.intellij.gwt.sdk.GwtSdkUtil;
 import org.randombits.intellij.gwt.sdk.GwtVersion;
 import org.randombits.intellij.gwt.sdk.impl.GwtVersionImpl;
-import com.intellij.javaee.web.facet.WebFacet;
 import com.intellij.openapi.application.WriteAction;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
@@ -78,11 +77,6 @@ public class GwtFacet extends Facet<GwtFacetConfiguration> {
 
   public static boolean isInModuleWithGwtFacet(final @NotNull Project project, final @Nullable VirtualFile file) {
     return findFacetBySourceFile(project, file) != null;
-  }
-
-  public @Nullable WebFacet getWebFacet() {
-    final String webFacetName = getConfiguration().getWebFacetName();
-    return webFacetName != null ? FacetManager.getInstance(getModule()).findFacet(WebFacet.ID, webFacetName) : null;
   }
 
   public @NotNull GwtVersion getSdkVersion() {

@@ -1,6 +1,6 @@
 package org.randombits.intellij.gwt.uiBinder;
 
-import com.intellij.javaee.model.annotations.AnnotationModelUtil;
+import org.randombits.intellij.gwt.GwtAnnotationUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiElement;
@@ -28,8 +28,8 @@ public class GwtUiChildElementDescriptor extends GwtXmlElementDescriptorBase {
                                      @NotNull PsiMethod method, PsiAnnotation annotation) {
     super(xmlNSDescriptor, namespacePrefix);
     myMethod = method;
-    //final Integer limit = AnnotationModelUtil.getObjectValue(annotation, "limit", Integer.class).getValue();
-    myTagName = AnnotationModelUtil.getObjectValue(annotation, "tagname", String.class).getStringValue();
+    Object tagName = GwtAnnotationUtil.getValue(annotation, "tagname");
+    myTagName = tagName instanceof String ? (String)tagName : null;
     if (StringUtil.isEmpty(myTagName)) {
       myTagName = StringUtil.toLowerCase(StringUtil.trimStart(method.getName(), "add"));
     }

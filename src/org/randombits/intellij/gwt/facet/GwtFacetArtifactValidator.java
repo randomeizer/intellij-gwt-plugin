@@ -1,5 +1,6 @@
 package org.randombits.intellij.gwt.facet;
 
+import org.randombits.intellij.gwt.web.GwtWebServletUtil;
 import com.intellij.facet.impl.ui.FacetEditorContextBase;
 import com.intellij.facet.ui.FacetConfigurationQuickFix;
 import com.intellij.facet.ui.FacetEditorContext;
@@ -9,7 +10,6 @@ import org.randombits.intellij.gwt.GwtBundle;
 import org.randombits.intellij.gwt.packaging.GwtCompileOutputRelativePathSuggester;
 import org.randombits.intellij.gwt.packaging.GwtCompilerOutputElement;
 import org.randombits.intellij.gwt.packaging.GwtCompilerOutputElementType;
-import org.randombits.intellij.gwt.rpc.GwtServletUtil;
 import org.randombits.intellij.gwt.sdk.GwtSdk;
 import com.intellij.javaee.artifact.JavaeeArtifactUtil;
 import com.intellij.javaee.web.artifact.WebArtifactUtil;
@@ -62,7 +62,7 @@ public class GwtFacetArtifactValidator extends FacetEditorValidator {
                                                  element -> !myFacet.equals(element.getFacet()), artifactsContext, false)) {
         final ArtifactType artifactType = artifact.getArtifactType();
         if (WebArtifactUtil.getInstance().isWebApplication(artifactType) && !containsServletJar(artifactsContext, artifact, artifactType)
-            && GwtServletUtil.hasServlets(myFacet)) {
+            && GwtWebServletUtil.hasServlets(myFacet)) {
           return new ValidationResult(
             GwtBundle.message("validation.result.gwt.servlet.jar.is.not.included.in.0.artifact", artifact.getName()),
             new IncludeGwtServletJarQuickFix(artifact, artifactsContext));

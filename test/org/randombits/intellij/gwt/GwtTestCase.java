@@ -5,7 +5,6 @@ package org.randombits.intellij.gwt;
 
 import com.intellij.facet.FacetManager;
 import com.intellij.facet.ModifiableFacetModel;
-import com.intellij.facet.impl.FacetUtil;
 import org.randombits.intellij.gwt.facet.GwtFacet;
 import org.randombits.intellij.gwt.facet.GwtFacetConfiguration;
 import org.randombits.intellij.gwt.facet.GwtFacetType;
@@ -14,14 +13,13 @@ import org.randombits.intellij.gwt.module.model.GwtModule;
 import org.randombits.intellij.gwt.sdk.GwtVersion;
 import org.randombits.intellij.gwt.sdk.impl.GwtSdkImpl;
 import org.randombits.intellij.gwt.sdk.impl.GwtVersionImpl;
-import com.intellij.javaee.DeploymentDescriptorsConstants;
-import com.intellij.javaee.web.facet.WebFacet;
-import com.intellij.javaee.web.facet.WebFacetType;
 import com.intellij.openapi.application.PathManager;
-import com.intellij.openapi.application.WriteAction;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.module.Module;
+import com.intellij.openapi.projectRoots.JavaSdk;
+import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ModuleRootModificationUtil;
+import com.intellij.openapi.roots.OrderRootType;
 import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.JarFileSystem;
@@ -30,6 +28,7 @@ import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileFilter;
+import com.intellij.openapi.vfs.newvfs.impl.VfsRootAccess;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.search.GlobalSearchScope;
@@ -45,6 +44,22 @@ import java.io.IOException;
 
 public abstract class GwtTestCase extends JavaPsiTestCase {
   @NonNls private static final String MOCK_GWT_USER_JAR_NAME = "gwt-user.jar";
+
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    VfsRootAccess.allowRootAccess(getTestRootDisposable(), getGwtTestDataPath());
+  }
+
+  @Override
+  protected Sdk getTestProjectJdk() {
+    Sdk sdk = super.getTestProjectJdk();
+    // Released IDEs do not ship the intellij-community mock JDK used by these legacy tests.
+    if (sdk.getRootProvider().getFiles(OrderRootType.CLASSES).length == 0) {
+      return JavaSdk.getInstance().createJdk("GWT test JDK", System.getProperty("java.home"), false);
+    }
+    return sdk;
+  }
 
   @NotNull
   protected <T extends PsiElement> T findElementByString(final VirtualFile file, final String s, final Class<T> aClass) {
@@ -161,16 +176,6 @@ public abstract class GwtTestCase extends JavaPsiTestCase {
 
   protected GwtModulesManager getGwtManager() {
     return GwtModulesManager.getInstance(myProject);
-  }
-
-  public static WebFacet addWebFacet(final GwtFacet gwtFacet, final String testDataPath, final String webXmlPath) {
-    return WriteAction.computeAndWait(() -> {
-      WebFacet webFacet = FacetUtil.addFacet(gwtFacet.getModule(), WebFacetType.getInstance());
-      final String webXmlUrl = VfsUtilCore.pathToUrl(testDataPath) + "/" + webXmlPath;
-      webFacet.getDescriptorsContainer().getConfiguration().addConfigFile(DeploymentDescriptorsConstants.WEB_XML_META_DATA, webXmlUrl);
-      gwtFacet.getConfiguration().setWebFacetName(webFacet.getName());
-      return webFacet;
-    });
   }
 
   protected GwtModule findGwtModule(final String qualifiedName) {

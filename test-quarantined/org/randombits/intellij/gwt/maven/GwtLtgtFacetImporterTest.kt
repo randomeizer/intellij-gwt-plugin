@@ -89,7 +89,7 @@ class GwtLtgtFacetImporterTest(mavenVersion: String, modelVersion: String) {
 
     val f = getFacet("project")
     assertEquals("file://c:/tools/gwt", f!!.configuration.gwtSdkUrl)
-    assertNull(f.getWebFacet())
+    assertNull(org.randombits.intellij.gwt.web.GwtWebSupportImpl.getWebFacet(f))
   }
 
   @Test

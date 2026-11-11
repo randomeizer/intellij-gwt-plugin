@@ -16,10 +16,8 @@
 
 package org.randombits.intellij.gwt.module.model;
 
+import org.randombits.intellij.gwt.web.GwtWebSupport;
 import org.randombits.intellij.gwt.facet.GwtFacet;
-import com.intellij.javaee.web.WebDirectoryElement;
-import com.intellij.javaee.web.WebUtil;
-import com.intellij.javaee.web.facet.WebFacet;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
@@ -63,16 +61,8 @@ public class CssFileConverter extends Converter<StylesheetFile> {
       pathFromWebRoot = null;
     }
     if (facet != null && facet.getSdkVersion().isHtmlFilesOutsideSourcesAreAllowed() && pathFromWebRoot != null) {
-      final WebFacet webFacet = facet.getWebFacet();
-      if (webFacet != null) {
-        final WebDirectoryElement element = WebUtil.getWebUtil().findWebDirectoryElement(pathFromWebRoot, webFacet);
-        if (element != null) {
-          final PsiFile file = element.getOriginalFile();
-          if (file instanceof StylesheetFile) {
-            return (StylesheetFile)file;
-          }
-        }
-      }
+      GwtWebSupport webSupport = GwtWebSupport.getInstance();
+      if (webSupport != null) return webSupport.findCssFile(facet, pathFromWebRoot);
     }
 
     return null;

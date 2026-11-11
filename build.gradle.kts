@@ -31,11 +31,13 @@ dependencies {
         intellijIdea(properties("platformVersion"))
 
         // hard dependencies (see resources/META-INF/plugin.xml <dependencies>)
-        bundledPlugin("com.intellij.modules.ultimate")
-        bundledPlugin("com.intellij.modules.idea.ultimate")
         bundledPlugin("JavaScript")
         bundledPlugin("com.intellij.css")
         bundledPlugin("com.intellij.java-i18n")
+        // Free Jakarta EE API modules; Web/Servlets implementations remain optional below.
+        bundledPlugin("com.intellij.javaee")
+
+        // Optional integrations (compile against their APIs without requiring them at runtime).
         bundledPlugin("com.intellij.javaee.app.servers.integration")
         bundledPlugin("com.intellij.javaee.web")
 
@@ -44,6 +46,7 @@ dependencies {
         bundledPlugin("com.intellij.gradle")
         bundledPlugin("org.jetbrains.plugins.gradle")
         bundledPlugin("JavaScriptDebugger")
+        bundledModule("intellij.platform.scriptDebugger.backend")
 
         // plugin content modules
         pluginModule(project(":spring"))
@@ -74,9 +77,11 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     // SDK path tests exercise the Maven and Gradle resolvers from the JPS module.
     testImplementation(project(":jps-plugin"))
-    testImplementation(platform("org.junit:junit-bom:5.13.4"))
+    // Match the JUnit runtime used by the 263 test framework.
+    testImplementation(platform("org.junit:junit-bom:6.1.3"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testRuntimeOnly("org.junit.vintage:junit-vintage-engine")
 }
 
 kotlin {
@@ -131,6 +136,41 @@ tasks.register("verifyReleaseTag") {
     }
 }
 
+// Dedicated sandbox: exercise the same unified product without subscription-only integrations.
+intellijPlatformTesting.testIde.register("testFreeEdition") {
+    listOf(
+        TestFrameworkType.Platform,
+        TestFrameworkType.Plugin.Java,
+        TestFrameworkType.Plugin.Maven,
+        TestFrameworkType.Plugin.ExternalSystem,
+        TestFrameworkType.JUnit5,
+    ).forEach { testFramework(it) }
+    plugins {
+        disablePlugins(listOf(
+            "com.intellij.modules.ultimate",
+            "com.intellij.modules.idea.ultimate",
+            "com.intellij.javaee.web",
+            "com.intellij.javaee.app.servers.integration",
+            "JavaScriptDebugger",
+        ))
+    }
+    task {
+        useJUnitPlatform()
+        testClassesDirs = sourceSets["test"].output.classesDirs
+        // Retain this task's SDK/sandbox classpath, then add the test dependencies.
+        classpath += sourceSets["test"].runtimeClasspath
+        systemProperty("gwt.test.data.path", layout.projectDirectory.dir("testData").asFile.absolutePath)
+        filter {
+            includeTestsMatching("org.randombits.intellij.gwt.GwtFreeEditionTest")
+            includeTestsMatching("org.randombits.intellij.gwt.GwtAnnotationUtilTest")
+            includeTestsMatching("org.randombits.intellij.gwt.model.GwtModuleTest")
+            includeTestsMatching("org.randombits.intellij.gwt.model.GwtSourceTagTest")
+            includeTestsMatching("org.randombits.intellij.gwt.model.GwtSuperSourceElementFinderTest")
+            includeTestsMatching("org.randombits.intellij.gwt.inspections.GwtInspectionsTest")
+        }
+    }
+}
+
 tasks {
     withType<JavaCompile> {
         sourceCompatibility = properties("platformJavaVersion")
@@ -138,9 +178,18 @@ tasks {
     }
 
     test {
-        systemProperty("idea.home.path", properties("test.idea.home.path"))
+        useJUnitPlatform()
+        classpath += sourceSets["test"].runtimeClasspath
+        exclude("**/GwtFreeEditionTest.class")
+        providers.gradleProperty("test.idea.home.path").orNull?.takeIf { it.isNotBlank() }?.let {
+            systemProperty("idea.home.path", it)
+        }
         // GWT tests resolve fixtures relative to this directory (see GwtTestCase.getGwtTestDataPath)
         systemProperty("gwt.test.data.path", layout.projectDirectory.dir("testData").asFile.absolutePath)
+    }
+
+    check {
+        dependsOn("testFreeEdition")
     }
 
     // bundle the legacy SuperDevMode launcher jar into the plugin's lib/ directory

@@ -1,5 +1,7 @@
 package org.randombits.intellij.gwt.facet;
 
+import org.randombits.intellij.gwt.web.GwtWebServletUtil;
+import org.randombits.intellij.gwt.web.GwtWebSupportImpl;
 import com.intellij.CommonBundle;
 import com.intellij.execution.RunManager;
 import com.intellij.execution.compound.CompoundRunConfiguration;
@@ -9,11 +11,9 @@ import org.randombits.intellij.gwt.module.GwtModulesManager;
 import org.randombits.intellij.gwt.module.model.GwtModule;
 import org.randombits.intellij.gwt.packaging.GwtCompileOutputRelativePathSuggester;
 import org.randombits.intellij.gwt.packaging.GwtCompilerOutputElement;
-import org.randombits.intellij.gwt.rpc.GwtServletUtil;
 import org.randombits.intellij.gwt.run.GwtRunConfiguration;
 import org.randombits.intellij.gwt.sdk.GwtVersion;
 import org.randombits.intellij.gwt.templates.GwtTemplates;
-import org.randombits.intellij.gwt.web.GwtWebUtil;
 import com.intellij.ide.util.frameworkSupport.FrameworkSupportModel;
 import com.intellij.javaee.JavaeeUtil;
 import com.intellij.javaee.appServers.deployment.DeploymentSettings;
@@ -147,9 +147,9 @@ public class GwtSampleApplicationCreator {
     StartupManager.getInstance(project).runWhenProjectIsInitialized(() ->
                                            runWriteCommandAction(project, GwtBundle.message("command.create.sample.gwt.project.files"), null, () -> {
       final GwtVersion gwtVersion = myFacet.getSdkVersion();
-      WebFacet webFacet = myFacet.getWebFacet();
+      WebFacet webFacet = GwtWebSupportImpl.getWebFacet(myFacet);
       if (gwtVersion.isHostedModeRequiresWebXml() && webFacet == null) {
-        webFacet = GwtWebUtil.createWebFacet(myFacet, finalContentRoot);
+        webFacet = GwtWebSupportImpl.createWebFacet(myFacet, finalContentRoot);
       }
 
       CommonStrategy javaEeConfiguration = null;
@@ -288,7 +288,7 @@ public class GwtSampleApplicationCreator {
           i = templatePath.indexOf(WAR_STRING);
           relativePath = templatePath.substring(i + WAR_STRING.length());
           LOG.assertTrue(i != -1, "incorrect template path: " + templatePath);
-          final WebFacet webFacet = myFacet.getWebFacet();
+          final WebFacet webFacet = GwtWebSupportImpl.getWebFacet(myFacet);
           LOG.assertTrue(webFacet != null);
           final List<WebRoot> webRoots = webFacet.getWebRoots();
           if (webRoots.isEmpty()) {
@@ -329,12 +329,12 @@ public class GwtSampleApplicationCreator {
 
     if (myFacet.getSdkVersion().isHostedModeRequiresWebXml()) {
       final String urlPattern = "/" + myAppName + "/" + serviceName;
-      final WebApp root = myFacet.getWebFacet().getRoot();
+      final WebApp root = GwtWebSupportImpl.getWebFacet(myFacet).getRoot();
       if (root != null) {
         GwtModule finalGwtModule = gwtModule;
         PsiClass finalServletImpl = servletImpl;
         DumbService.getInstance(project).runWithAlternativeResolveEnabled(() ->
-          GwtServletUtil.registerServletForService(finalGwtModule, root, finalServletImpl, serviceName, urlPattern)
+          GwtWebServletUtil.registerServletForService(finalGwtModule, root, finalServletImpl, serviceName, urlPattern)
         );
       }
     }

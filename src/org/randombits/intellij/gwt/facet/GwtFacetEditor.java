@@ -16,7 +16,7 @@
 
 package org.randombits.intellij.gwt.facet;
 
-import com.intellij.facet.FacetManager;
+import org.randombits.intellij.gwt.web.GwtWebSupport;
 import com.intellij.facet.impl.ui.FacetEditorContextBase;
 import com.intellij.facet.ui.FacetConfigurationQuickFix;
 import com.intellij.facet.ui.FacetEditorContext;
@@ -33,7 +33,7 @@ import org.randombits.intellij.gwt.sdk.GwtSdk;
 import org.randombits.intellij.gwt.sdk.GwtSdkManager;
 import org.randombits.intellij.gwt.sdk.GwtSdkType;
 import org.randombits.intellij.gwt.sdk.GwtSdkUtil;
-import com.intellij.javaee.web.facet.WebFacet;
+import org.randombits.intellij.gwt.web.GwtWebUtil;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
@@ -265,18 +265,18 @@ public class GwtFacetEditor extends FacetEditorTab {
 
     final Module module = editorContext.getModule();
     myWebFacetBox.addItem(null);
-    for (WebFacet webFacet : editorContext.getFacetsProvider().getFacetsByType(module, WebFacet.ID)) {
-      myWebFacetBox.addItem(webFacet.getName());
+    GwtWebSupport webSupport = GwtWebSupport.getInstance();
+    if (webSupport != null) {
+      for (var webFacet : webSupport.getWebFacets(editorContext)) {
+        myWebFacetBox.addItem(webFacet.getName());
+      }
     }
     myWebFacetBox.setSelectedIndex(0);
 
     setupGwtOutputStyleCombobox(myOutputStyleBox);
     myWebFacetBox.setRenderer(LcrJavaHelper.create(
       GwtBundle.message("label.none.facet.selected"),
-      value -> {
-        WebFacet webFacet = FacetManager.getInstance(module).findFacet(WebFacet.ID, value);
-        return new RendererPresentation(webFacet != null ? webFacet.getType().getIcon() : null, value);
-      }
+      value -> new RendererPresentation(webSupport == null ? null : webSupport.getWebFacetIcon(module, value), value)
     ));
 
     validatorsManager.registerValidator(new FacetEditorValidator() {
@@ -294,7 +294,13 @@ public class GwtFacetEditor extends FacetEditorTab {
       }
     }, myGwtPathEditor.getComboBox());
 
-    validatorsManager.registerValidator(new GwtFacetArtifactValidator((GwtFacet)editorContext.getFacet(), myEditorContext, this));
+    if (webSupport != null) {
+      validatorsManager.registerValidator(webSupport.createArtifactValidator((GwtFacet)editorContext.getFacet(), myEditorContext, this));
+    }
+    else {
+      myWebFacetBox.getParent().setVisible(false);
+      myPackagingPathsPanel.setVisible(false);
+    }
 
     final ColumnInfo[] columns = {ENABLED_COLUMN, MODULE_NAME_COLUMN, OUTPUT_PATH_COLUMN};
     myModulePackagingInfos = new ArrayList<>();
@@ -543,7 +549,8 @@ public class GwtFacetEditor extends FacetEditorTab {
   }
 
   public @Nullable String getSelectedWebFacet() {
-    return (String)myWebFacetBox.getSelectedItem();
+    // Keep the association when editing this project without the optional Web plugin.
+    return GwtWebUtil.isWebSupportAvailable() ? (String)myWebFacetBox.getSelectedItem() : myConfiguration.getWebFacetName();
   }
 
   @Override

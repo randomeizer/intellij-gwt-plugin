@@ -15,6 +15,7 @@
  */
 package org.randombits.intellij.gwt.run;
 
+import org.randombits.intellij.gwt.web.GwtWebSupportImpl;
 import com.intellij.application.options.ModulesComboBox;
 import com.intellij.execution.BeforeRunTask;
 import com.intellij.execution.configurations.ParametersList;
@@ -703,7 +704,7 @@ public final class GwtRunConfigurationEditor extends SettingsEditor<GwtRunConfig
     if (webFacets.isEmpty() || facet == null || facet.getSdkVersion().isHostedModeRequiresWebXml()) return false;
 
     if (myWebXmlField.getText().trim().isEmpty()) {
-      WebFacet webFacet = facet.getWebFacet();
+      WebFacet webFacet = GwtWebSupportImpl.getWebFacet(facet);
       if (webFacet == null) {
         webFacet = webFacets.iterator().next();
       }

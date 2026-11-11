@@ -1,0 +1,5 @@
+<idea-plugin>
+  <extensions defaultExtensionNs="org.jetbrains.plugins.gradle">
+    <executionEnvironmentProvider implementation="org.randombits.intellij.gwt.gradle.GwtGradleExecutionEnvironmentProvider"/>
+  </extensions>
+</idea-plugin>

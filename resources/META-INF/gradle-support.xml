@@ -5,9 +5,5 @@
 
   <extensions defaultExtensionNs="com.intellij">
     <externalProjectDataService implementation="org.randombits.intellij.gwt.gradle.GwtDependencyDataService"/>
-    <externalProjectDataService implementation="org.randombits.intellij.gwt.gradle.GwtArtifactsDataService"/>
-  </extensions>
-  <extensions defaultExtensionNs="org.jetbrains.plugins.gradle">
-    <executionEnvironmentProvider implementation="org.randombits.intellij.gwt.gradle.GwtGradleExecutionEnvironmentProvider"/>
   </extensions>
 </idea-plugin>

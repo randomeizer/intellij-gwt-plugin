@@ -1,10 +1,10 @@
 package org.randombits.intellij.gwt.references;
 
+import org.randombits.intellij.gwt.web.GwtWebSupport;
 import org.randombits.intellij.gwt.facet.GwtFacet;
 import org.randombits.intellij.gwt.module.GwtModulesManager;
 import org.randombits.intellij.gwt.module.model.GwtModule;
-import com.intellij.javaee.web.WebDirectoryElement;
-import com.intellij.javaee.web.WebUtil;
+import org.randombits.intellij.gwt.web.GwtWebUtil;
 import com.intellij.openapi.deployment.DeploymentUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Pair;
@@ -44,13 +44,11 @@ class GeneratedJsReferenceProvider extends PsiReferenceProvider {
             if (!gwtModulesByPublicFile.isEmpty()) {
               return new PsiReference[] {new GwtModuleInHtmlFileUnderPublicRootReference(file, attributeValue)};
             }
-            else if (gwtFacet.getSdkVersion().isHtmlFilesOutsideSourcesAreAllowed()) {
-              final WebDirectoryElement webDirectory = WebUtil.findWebDirectoryByFile(file, project);
-              if (webDirectory != null) {
-                final WebDirectoryElement parent = webDirectory.getParent();
-                if (parent != null) {
-                  return new PsiReference[] {new GwtModuleInHtmlFileUnderWebRootReference(parent.getPath(), attributeValue)};
-                }
+            else if (gwtFacet.getSdkVersion().isHtmlFilesOutsideSourcesAreAllowed() && GwtWebUtil.isWebSupportAvailable()) {
+              GwtWebSupport webSupport = GwtWebSupport.getInstance();
+              String parentPath = webSupport == null ? null : webSupport.getParentPathFromWebRoot(file, project);
+              if (parentPath != null) {
+                return new PsiReference[] {new GwtModuleInHtmlFileUnderWebRootReference(parentPath, attributeValue)};
               }
             }
           }

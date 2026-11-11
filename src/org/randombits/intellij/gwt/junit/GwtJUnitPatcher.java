@@ -16,6 +16,7 @@
 
 package org.randombits.intellij.gwt.junit;
 
+import org.randombits.intellij.gwt.web.GwtWebSupportImpl;
 import com.intellij.execution.JUnitPatcher;
 import com.intellij.execution.configurations.JavaParameters;
 import com.intellij.execution.configurations.ParametersList;
@@ -138,7 +139,7 @@ public final class GwtJUnitPatcher extends JUnitPatcher {
     String testGenPath = GwtCompilerPaths.getTestGenDirectory(module).getAbsolutePath();
     String testOutputPath = GwtCompilerPaths.getTestOutputDirectory(module).getAbsolutePath();
     if (sdkVersion.isHostedModeRequiresWebXml() && !haveOutOption) {
-      final WebFacet webFacet = facet.getWebFacet();
+      final WebFacet webFacet = GwtWebSupportImpl.getWebFacet(facet);
       if (webFacet != null) {
         final ConfigFile webXmlDescriptor = webFacet.getWebXmlDescriptor();
         if (webXmlDescriptor != null) {

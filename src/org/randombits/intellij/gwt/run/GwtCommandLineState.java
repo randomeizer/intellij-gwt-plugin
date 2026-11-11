@@ -15,6 +15,7 @@
  */
 package org.randombits.intellij.gwt.run;
 
+import org.randombits.intellij.gwt.web.GwtWebSupportImpl;
 import com.intellij.execution.DefaultExecutionResult;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.ExecutionResult;
@@ -442,7 +443,7 @@ public final class GwtCommandLineState extends JavaCommandLineStateEx {
     }
 
     HostedModeWarDirectoryGenerator generator = null;
-    final WebFacet webFacet = myFacet.getWebFacet();
+    final WebFacet webFacet = GwtWebSupportImpl.getWebFacet(myFacet);
     if (myFacet.getSdkVersion().isHostedModeRequiresWebXml() && !hasNoServerParameter()) {
       generator = createDevModeWarDirectoryGenerator(getOutputDir(), new File(getTempOutputDir(), "files.dat"));
       if (myRunConfigurationState.USE_SUPER_DEV_MODE) {
@@ -530,7 +531,7 @@ public final class GwtCommandLineState extends JavaCommandLineStateEx {
       enumerator.forEachModule(module -> {
         GwtFacet facet = GwtFacet.getInstance(module);
         if (facet != null) {
-          ContainerUtil.addIfNotNull(webFacets, facet.getWebFacet());
+          ContainerUtil.addIfNotNull(webFacets, GwtWebSupportImpl.getWebFacet(facet));
         }
         else {
           webFacets.addAll(WebFacet.getInstances(module));

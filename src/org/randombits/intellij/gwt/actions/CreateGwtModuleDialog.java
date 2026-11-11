@@ -1,8 +1,7 @@
 package org.randombits.intellij.gwt.actions;
 
+import org.randombits.intellij.gwt.web.GwtWebSupport;
 import org.randombits.intellij.gwt.facet.GwtFacet;
-import com.intellij.javaee.web.WebRoot;
-import com.intellij.javaee.web.facet.WebFacet;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.roots.ModuleRootManager;
@@ -127,10 +126,10 @@ public class CreateGwtModuleDialog extends DialogWrapper {
     });
 
     myAdjustingDirectory = true;
-    final WebFacet webFacet = facet.getWebFacet();
-    if (webFacet != null) {
-      for (WebRoot webRoot : webFacet.getWebRoots()) {
-        myComboBox.addItem(FileUtil.toSystemDependentName(VfsUtilCore.urlToPath(webRoot.getDirectoryUrl())));
+    GwtWebSupport webSupport = GwtWebSupport.getInstance();
+    if (webSupport != null) {
+      for (String rootUrl : webSupport.getWebRootUrls(facet)) {
+        myComboBox.addItem(FileUtil.toSystemDependentName(VfsUtilCore.urlToPath(rootUrl)));
       }
     }
     myComboBox.addItem(computeHtmlDirectoryInSourcesPath());
