@@ -1,7 +1,6 @@
 package org.randombits.intellij.gwt.jps.model.impl;
 
 import com.intellij.util.PathUtilRt;
-import com.intellij.util.xmlb.XmlSerializerUtil;
 import org.jetbrains.annotations.NotNull;
 import org.randombits.intellij.gwt.jps.index.JpsGwtModule;
 import org.randombits.intellij.gwt.jps.model.GwtJavaScriptOutputStyle;
@@ -26,11 +25,6 @@ public class JpsGwtModuleExtensionImpl extends JpsCompositeElementBase<JpsGwtMod
 
   public JpsGwtModuleExtensionImpl(GwtModuleExtensionProperties properties) {
     myProperties = properties;
-  }
-
-  private JpsGwtModuleExtensionImpl(JpsGwtModuleExtensionImpl original) {
-    super(original);
-    myProperties = XmlSerializerUtil.createCopy(original.myProperties);
   }
 
   public GwtModuleExtensionProperties getProperties() {
@@ -104,8 +98,4 @@ public class JpsGwtModuleExtensionImpl extends JpsCompositeElementBase<JpsGwtMod
     return new GwtSdkPathsImpl(sdkUrl);
   }
 
-  @Override
-  public @NotNull JpsGwtModuleExtensionImpl createCopy() {
-    return new JpsGwtModuleExtensionImpl(this);
-  }
 }

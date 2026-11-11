@@ -1,6 +1,5 @@
 package org.randombits.intellij.gwt.jps.model.impl;
 
-import org.jetbrains.annotations.NotNull;
 import org.randombits.intellij.gwt.jps.model.JpsGwtCompilerProjectExtension;
 import org.randombits.intellij.gwt.jps.model.JpsGwtModuleExtension;
 import org.jetbrains.jps.model.JpsElementChildRole;
@@ -18,11 +17,6 @@ public class JpsGwtCompilerProjectExtensionImpl extends JpsElementBase<JpsGwtCom
 
   public JpsGwtCompilerProjectExtensionImpl(Collection<String> modulesToShowCompilerOutput) {
     myModulesToShowCompilerOutput = new LinkedHashSet<>(modulesToShowCompilerOutput);
-  }
-
-  @Override
-  public @NotNull JpsGwtCompilerProjectExtensionImpl createCopy() {
-    return new JpsGwtCompilerProjectExtensionImpl(myModulesToShowCompilerOutput);
   }
 
   @Override

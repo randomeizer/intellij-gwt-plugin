@@ -14,6 +14,7 @@ import com.intellij.ui.CheckboxTreeListener;
 import com.intellij.ui.CheckedTreeNode;
 import com.intellij.ui.ColoredTreeCellRenderer;
 import com.intellij.ui.ScrollPaneFactory;
+import com.intellij.util.containers.TreeTraversal;
 import com.intellij.util.ui.JBUI;
 import com.intellij.util.ui.tree.TreeUtil;
 import org.jetbrains.annotations.NotNull;
@@ -77,7 +78,7 @@ public class ChooseGwtModulesDialog extends DialogWrapper {
 
   public @NotNull List<String> getSelectedModules() {
     final List<String> modules = new ArrayList<>();
-    TreeUtil.traverse(myRoot, node -> {
+    TreeUtil.treeNodeTraverser(myRoot).traverse(TreeTraversal.POST_ORDER_DFS).processEach(node -> {
       if (node instanceof GwtModuleCheckedTreeNode && ((GwtModuleCheckedTreeNode)node).isChecked()) {
         modules.add(((GwtModuleCheckedTreeNode)node).getQualifiedModuleName());
       }

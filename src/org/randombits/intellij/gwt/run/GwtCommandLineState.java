@@ -86,6 +86,7 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.GlobalSearchScopesCore;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.ArrayUtilRt;
+import com.intellij.util.EnvironmentUtil;
 import com.intellij.util.ObjectUtils;
 import com.intellij.util.PathUtil;
 import com.intellij.util.PathsList;
@@ -112,8 +113,10 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -278,7 +281,13 @@ public final class GwtCommandLineState extends JavaCommandLineStateEx {
     else {
       programParameters.add(runPage);
     }
-    params.setupEnvs(myRunConfigurationState.ENVIRONMENT_VARIABLES, myRunConfigurationState.PASS_PARENT_ENVS);
+    Map<String, String> environmentVariables = myRunConfigurationState.ENVIRONMENT_VARIABLES;
+    if (!environmentVariables.isEmpty()) {
+      environmentVariables = new HashMap<>(environmentVariables);
+      EnvironmentUtil.inlineParentOccurrences(environmentVariables);
+    }
+    params.setEnv(environmentVariables);
+    params.setPassParentEnvs(myRunConfigurationState.PASS_PARENT_ENVS);
 
     final GwtSdk sdk = myFacet.getConfiguration().getSdk();
     classPath.addFirst(sdk.getDevJarPath());
