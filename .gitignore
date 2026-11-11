@@ -6,6 +6,9 @@
 /runtime/build/
 /spring/build/
 
+# Python release monitor
+__pycache__/
+
 # IntelliJ Platform Gradle Plugin downloads and sandboxes
 .intellijPlatform/
 
