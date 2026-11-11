@@ -46,7 +46,7 @@ public class GenerateCompilerReportDialog extends DialogWrapper {
   private static final @NonNls String REPORT_FILE_PATH = "soycReport/compile-report/index.html";
   private final ViewReportAction myViewReportAction;
   private final CompileReportsHistory myReportsHistory;
-  public static final @NonNls String MODULE_PROPERTY_KEY = "GWT.GenerateCompileReport.Module";
+  public static final @NonNls String MODULE_PROPERTY_KEY = "org.randombits.intellij.gwt.GenerateCompileReport.Module";
 
   public GenerateCompilerReportDialog(@NotNull Project project, final List<GwtModule> modules) {
     super(project);

@@ -12,7 +12,8 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 public class JpsGwtCompilerProjectExtensionImpl extends JpsElementBase<JpsGwtCompilerProjectExtensionImpl> implements JpsGwtCompilerProjectExtension {
-  public static final JpsElementChildRole<JpsGwtCompilerProjectExtension> ROLE = JpsElementChildRoleBase.create("GWT Compiler Configuration");
+  public static final JpsElementChildRole<JpsGwtCompilerProjectExtension> ROLE =
+    JpsElementChildRoleBase.create("org.randombits.intellij.gwt.compiler-project");
   private final Set<String> myModulesToShowCompilerOutput;
 
   public JpsGwtCompilerProjectExtensionImpl(Collection<String> modulesToShowCompilerOutput) {

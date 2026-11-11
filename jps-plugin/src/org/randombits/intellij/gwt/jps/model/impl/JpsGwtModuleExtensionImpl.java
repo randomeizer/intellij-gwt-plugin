@@ -19,7 +19,8 @@ import org.jetbrains.jps.model.module.JpsModule;
 import org.jetbrains.jps.util.JpsPathUtil;
 
 public class JpsGwtModuleExtensionImpl extends JpsCompositeElementBase<JpsGwtModuleExtensionImpl> implements JpsGwtModuleExtension {
-  public static final JpsElementChildRole<JpsGwtModuleExtension> ROLE = JpsElementChildRoleBase.create("GWT");
+  public static final JpsElementChildRole<JpsGwtModuleExtension> ROLE =
+    JpsElementChildRoleBase.create("org.randombits.intellij.gwt.module");
   public static final int DEFAULT_COMPILER_HEAP_SIZE = 1024;
   private final GwtModuleExtensionProperties myProperties;
 

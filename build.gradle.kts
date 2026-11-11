@@ -10,8 +10,14 @@ plugins {
     id("org.jetbrains.intellij.platform") version "2.18.1"
 }
 
+val pluginVersion = properties("pluginVersion")
+val changeNotesFile = layout.projectDirectory.file("change-notes/$pluginVersion.html")
+require(changeNotesFile.asFile.isFile) {
+    "Missing change notes for plugin version $pluginVersion: ${changeNotesFile.asFile}"
+}
+
 group = "org.randombits.intellij.gwt"
-version = properties("pluginVersion")
+version = pluginVersion
 
 repositories {
     mavenCentral()
@@ -101,7 +107,7 @@ intellijPlatform {
             sinceBuild = properties("pluginSinceBuild")
         }
 
-        changeNotes = ""
+        changeNotes = providers.fileContents(changeNotesFile).asText.get()
     }
 }
 

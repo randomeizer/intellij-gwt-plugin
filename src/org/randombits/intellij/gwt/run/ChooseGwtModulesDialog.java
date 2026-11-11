@@ -95,7 +95,7 @@ public class ChooseGwtModulesDialog extends DialogWrapper {
 
   @Override
   protected @Nullable String getDimensionServiceKey() {
-    return "#GWT.ChooseModulesDialog";
+    return "#org.randombits.intellij.gwt.ChooseModulesDialog";
   }
 
   private static class GwtModulesCheckboxTreeCellRenderer extends CheckboxTree.CheckboxTreeCellRenderer {

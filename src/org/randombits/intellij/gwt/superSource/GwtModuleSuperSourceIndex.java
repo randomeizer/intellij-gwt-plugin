@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.Set;
 
 public final class GwtModuleSuperSourceIndex extends FileBasedIndexExtension<String, List<String>> {
-  private static final ID<String,List<String>> NAME = ID.create("GwtXmlFileSuperSource");
+  private static final ID<String,List<String>> NAME = ID.create("org.randombits.intellij.gwt.GwtXmlFileSuperSource");
   private static final String KEY = "";
   private static final @NonNls String SUPER_SOURCE_PATH = ".module.super-source";
 

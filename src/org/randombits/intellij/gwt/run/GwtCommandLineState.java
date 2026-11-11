@@ -671,7 +671,7 @@ public final class GwtCommandLineState extends JavaCommandLineStateEx {
         return myDependenciesStorage.getDependenciesPaths(groupId, artifactId, version);
       }
       catch (JpsGwtDependenciesStorage.GwtDependenciesNotFoundException e) {
-        new Notification(NotificationGroup.createIdWithTitle("GWT", GwtBundle.message("gwt.notification.display.id")), e.getMessage(),
+        new Notification(NotificationGroup.createIdWithTitle("org.randombits.intellij.gwt.notifications", GwtBundle.message("gwt.notification.display.id")), e.getMessage(),
                          NotificationType.WARNING)
           .setImportant(false)
           .notify(myProject);
@@ -695,7 +695,7 @@ public final class GwtCommandLineState extends JavaCommandLineStateEx {
         }
       }
 
-      new Notification(NotificationGroup.createIdWithTitle("GWT", GwtBundle.message("gwt.notification.display.id")), StringUtil.join(messages, "\n"),
+      new Notification(NotificationGroup.createIdWithTitle("org.randombits.intellij.gwt.notifications", GwtBundle.message("gwt.notification.display.id")), StringUtil.join(messages, "\n"),
                        NotificationType.WARNING)
         .setImportant(false)
         .notify(myProject);

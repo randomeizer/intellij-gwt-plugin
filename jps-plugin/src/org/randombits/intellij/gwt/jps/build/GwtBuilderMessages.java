@@ -6,7 +6,7 @@ import org.jetbrains.jps.incremental.CompileContext;
 import org.jetbrains.jps.incremental.messages.CustomBuilderMessage;
 
 public final class GwtBuilderMessages {
-  public static final String BUILDER_ID = "GWT";
+  public static final String BUILDER_ID = "org.randombits.intellij.gwt";
   public static final @NonNls String LOGGING_STARTED_TYPE = "!start!";
   public static final @NonNls String LOGGING_FINISHED_TYPE = "!finish!";
   public static final @NonNls String COMPILE_REPORT_PREFIX = "!compile-report!";

@@ -7,6 +7,6 @@ public final class GwtCssLanguage extends Language {
   public static final GwtCssLanguage GWT_CSS_LANGUAGE = new GwtCssLanguage();
 
   private GwtCssLanguage() {
-    super(CSSLanguage.INSTANCE, "GWT-CSS", "text/css");
+    super(CSSLanguage.INSTANCE, "Randombits GWT-CSS", "text/css");
   }
 }

@@ -29,7 +29,7 @@ public class GwtLanguageDialect extends JSLanguageDialect implements DependentLa
   public static final JSLanguageDialect GWT_DIALECT = new GwtLanguageDialect();
 
   private GwtLanguageDialect() {
-    super("GWT JavaScript", DIALECT_OPTION_HOLDER);
+    super("Randombits GWT JavaScript", DIALECT_OPTION_HOLDER);
   }
 
   @Override

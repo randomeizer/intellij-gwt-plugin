@@ -129,14 +129,14 @@
     <codeInsight.lineMarkerProvider language="JAVA" implementationClass="org.randombits.intellij.gwt.i18n.PropertiesInterfaceLineMarkerProvider"/>
     <gotoRelatedProvider implementation="org.randombits.intellij.gwt.i18n.PropertiesFileToInterfaceItemProvider"/>
 
-    <lang.parserDefinition language="GWT-CSS" implementationClass="org.randombits.intellij.gwt.clientBundle.css.language.GwtCssParserDefinition"/>
+    <lang.parserDefinition language="Randombits GWT-CSS" implementationClass="org.randombits.intellij.gwt.clientBundle.css.language.GwtCssParserDefinition"/>
     <stubElementTypeHolder class="org.randombits.intellij.gwt.clientBundle.css.language.GwtCssStubElementTypes"/>
-    <lang.ast.factory language="GWT-CSS" implementationClass="org.randombits.intellij.gwt.clientBundle.css.language.GwtCssTreeElementFactory"/>
+    <lang.ast.factory language="Randombits GWT-CSS" implementationClass="org.randombits.intellij.gwt.clientBundle.css.language.GwtCssTreeElementFactory"/>
     <lang.substitutor language="CSS" implementationClass="org.randombits.intellij.gwt.clientBundle.css.language.GwtCssLanguageSubstitutor"/>
-    <lang.formatter language="GWT-CSS" implementationClass="org.randombits.intellij.gwt.clientBundle.css.language.GwtCssFormattingModelBuilder"/>
+    <lang.formatter language="Randombits GWT-CSS" implementationClass="org.randombits.intellij.gwt.clientBundle.css.language.GwtCssFormattingModelBuilder"/>
     <psi.referenceContributor language="CSS" implementation="org.randombits.intellij.gwt.clientBundle.css.GwtCssReferenceContributor"/>
-    <css.cssInspectionFilter language="GWT-CSS" implementationClass="org.randombits.intellij.gwt.clientBundle.css.GwtCssInspectionFilter"/>
-    <lang.findUsagesProvider language="GWT-CSS" implementationClass="org.randombits.intellij.gwt.clientBundle.css.GwtCssFindUsagesProvider"/>
+    <css.cssInspectionFilter language="Randombits GWT-CSS" implementationClass="org.randombits.intellij.gwt.clientBundle.css.GwtCssInspectionFilter"/>
+    <lang.findUsagesProvider language="Randombits GWT-CSS" implementationClass="org.randombits.intellij.gwt.clientBundle.css.GwtCssFindUsagesProvider"/>
 
     <css.classOrIdUsagesProvider implementation="org.randombits.intellij.gwt.references.search.GwtCssClassUsagesProvider"/>
     <referencesSearch implementation="org.randombits.intellij.gwt.references.search.GwtToHtmlTagIdReferencesSearcher"/>
@@ -154,10 +154,10 @@
     <configurationType implementation="org.randombits.intellij.gwt.run.GwtRunConfigurationType"/>
     <runConfigurationProducer implementation="org.randombits.intellij.gwt.run.GwtConfigurationProvider"/>
 
-    <lang.parserDefinition language="GWT JavaScript" implementationClass="org.randombits.intellij.gwt.jsinject.parser.GwtParserDefinition"/>
+    <lang.parserDefinition language="Randombits GWT JavaScript" implementationClass="org.randombits.intellij.gwt.jsinject.parser.GwtParserDefinition"/>
     <stubElementRegistryExtension implementation="org.randombits.intellij.gwt.jsinject.parser.GwtStubRegistryExtension"/>
-    <lang.namesValidator language="GWT JavaScript" implementationClass="org.randombits.intellij.gwt.jsinject.parser.GwtNamesValidator"/>
-    <lang.syntaxHighlighterFactory language="GWT JavaScript"
+    <lang.namesValidator language="Randombits GWT JavaScript" implementationClass="org.randombits.intellij.gwt.jsinject.parser.GwtNamesValidator"/>
+    <lang.syntaxHighlighterFactory language="Randombits GWT JavaScript"
                                    implementationClass="org.randombits.intellij.gwt.jsinject.parser.GwtSyntaxHighlighterFactory"/>
 
     <lang.elementManipulator forClass="org.randombits.intellij.gwt.jsinject.JSGwtReferenceExpressionImpl"
@@ -211,107 +211,107 @@
     <typedHandler implementation="org.randombits.intellij.gwt.uiBinder.GwtUiXmlTypedHandler"/>
     <backspaceHandlerDelegate implementation="org.randombits.intellij.gwt.clientBundle.css.GwtCssBackspaceHandler"/>
 
-    <localInspection language="JAVA" shortName="GWTRemoteServiceAsyncCheck"
+    <localInspection language="JAVA" shortName="RandombitsGWTRemoteServiceAsyncCheck"
                      key="inspection.name.inconsistent.gwt.remote.service" groupKey="group.gwt.inspections.name" enabledByDefault="true"
                      level="ERROR" implementationClass="org.randombits.intellij.gwt.inspections.GwtInconsistentAsyncInterfaceInspection"/>
-    <localInspection shortName="GWTStyleCheck"
+    <localInspection shortName="RandombitsGWTStyleCheck"
                      key="inspection.unresolved.references.to.css.classes.display.name" groupKey="group.gwt.inspections.name"
                      enabledByDefault="true" level="ERROR"
                      implementationClass="org.randombits.intellij.gwt.inspections.GwtToCssClassReferencesInspection"/>
-    <localInspection language="JAVA" shortName="NonSerializableServiceParameters"
+    <localInspection language="JAVA" shortName="RandombitsNonSerializableServiceParameters"
                      key="inspection.name.non.serializable.service.method.parameters" groupKey="group.gwt.inspections.name"
                      enabledByDefault="true" level="ERROR"
                      implementationClass="org.randombits.intellij.gwt.inspections.GwtNonSerializableRemoteServiceMethodParametersInspection"/>
-    <localInspection language="JAVA" shortName="GwtToHtmlReferences"
+    <localInspection language="JAVA" shortName="RandombitsGwtToHtmlReferences"
                      key="inspection.name.unresolved.references.to.html.tags" groupKey="group.gwt.inspections.name" enabledByDefault="true"
                      level="ERROR" implementationClass="org.randombits.intellij.gwt.inspections.GwtToHtmlTagReferencesInspection"/>
-    <localInspection language="JAVA" shortName="NonJREEmulationClassesInClientCode"
+    <localInspection language="JAVA" shortName="RandombitsNonJREEmulationClassesInClientCode"
                      key="inspection.name.classes.not.from.jre.emulation.library.in.client.code" groupKey="group.gwt.inspections.name"
                      enabledByDefault="true" level="ERROR"
                      implementationClass="org.randombits.intellij.gwt.inspections.NonJREEmulationClassesInClientCodeInspection"/>
-    <localInspection language="JAVA" shortName="GwtClientClassFromNonInheritedModule"
+    <localInspection language="JAVA" shortName="RandombitsGwtClientClassFromNonInheritedModule"
                      key="inspection.name.client.class.from.non.inherited.module.usage" groupKey="group.gwt.inspections.name"
                      enabledByDefault="true" level="ERROR"
                      implementationClass="org.randombits.intellij.gwt.inspections.ClientClassFromNonInheritedModuleUsageInspection"/>
-    <localInspection shortName="GwtServiceNotRegistered"
+    <localInspection shortName="RandombitsGwtServiceNotRegistered"
                      key="inspection.name.gwt.remote.service.is.not.registered.in.web.xml" groupKey="group.gwt.inspections.name"
                      enabledByDefault="true" level="ERROR"
                      implementationClass="org.randombits.intellij.gwt.inspections.GwtServiceNotRegisteredInspection"/>
-    <localInspection shortName="GwtInconsistentI18nInterface"
+    <localInspection shortName="RandombitsGwtInconsistentI18nInterface"
                      key="inspection.name.inconsistent.gwt.localizable.interface" groupKey="group.gwt.inspections.name"
                      enabledByDefault="true" level="ERROR"
                      implementationClass="org.randombits.intellij.gwt.inspections.GwtInconsistentLocalizableInterfaceInspection"/>
-    <localInspection language="JAVA" shortName="GwtInconsistentSerializableClass"
+    <localInspection language="JAVA" shortName="RandombitsGwtInconsistentSerializableClass"
                      key="inspection.name.incorrect.serializable.class" groupKey="group.gwt.inspections.name" enabledByDefault="true"
                      level="ERROR" implementationClass="org.randombits.intellij.gwt.inspections.GwtInconsistentSerializableClassInspection"/>
-    <localInspection shortName="GwtMethodWithParametersInConstantsInterface"
+    <localInspection shortName="RandombitsGwtMethodWithParametersInConstantsInterface"
                      key="inspection.name.method.with.parameters.in.interface.extending.constants" groupKey="group.gwt.inspections.name"
                      enabledByDefault="true" level="ERROR"
                      implementationClass="org.randombits.intellij.gwt.inspections.GwtMethodWithParametersInConstantsInterfaceInspection"/>
-    <localInspection language="GWT JavaScript" shortName="GwtJavaScriptReferences"
+    <localInspection language="Randombits GWT JavaScript" shortName="RandombitsGwtJavaScriptReferences"
                      key="inspection.name.unresolved.references.in.jsni.methods" groupKey="group.gwt.inspections.name"
                      enabledByDefault="true" level="ERROR"
                      implementationClass="org.randombits.intellij.gwt.inspections.GwtJavaScriptReferencesInspection"/>
-    <localInspection language="GWT JavaScript" shortName="GwtJavaFromJSMethodCalls"
+    <localInspection language="Randombits GWT JavaScript" shortName="RandombitsGwtJavaFromJSMethodCalls"
                      key="inspection.name.incorrect.java.methods.calls.in.js" groupKey="group.gwt.inspections.name"
                      enabledByDefault="true" level="ERROR"
                      implementationClass="org.randombits.intellij.gwt.inspections.GwtJavaFromJSMethodCallsInspection"/>
-    <localInspection language="JAVA" shortName="GwtObsoleteTypeArgsJavadocTag"
+    <localInspection language="JAVA" shortName="RandombitsGwtObsoleteTypeArgsJavadocTag"
                      key="inspection.name.obsolete.gwt.type.args.tag.in.javadoc.comments" groupKey="group.gwt.inspections.name"
                      enabledByDefault="true" level="WARNING"
                      implementationClass="org.randombits.intellij.gwt.inspections.GwtObsoleteTypeArgsJavadocTagInspection"/>
-    <localInspection language="JAVA" shortName="GwtOverlayTypeRestrictionsViolated"
+    <localInspection language="JAVA" shortName="RandombitsGwtOverlayTypeRestrictionsViolated"
                      key="inspection.name.overlay.type.restrictions.violated" groupKey="group.gwt.inspections.name"
                      enabledByDefault="true" level="ERROR"
                      implementationClass="org.randombits.intellij.gwt.inspections.GwtOverlayTypeRestrictionsInspection"/>
-    <localInspection language="JAVA" shortName="gwtRawAsyncCallback"
+    <localInspection language="JAVA" shortName="RandombitsGwtRawAsyncCallback"
                      key="inspection.name.raw.use.of.async.callback.in.asynchronous.service.interfaces" groupKey="group.gwt.inspections.name"
                      enabledByDefault="true" level="WARNING"
                      implementationClass="org.randombits.intellij.gwt.inspections.GwtRawAsyncCallbackInspection"/>
-    <localInspection language="JAVA" shortName="GwtDeprecatedPropertyKeyJavadocTag"
+    <localInspection language="JAVA" shortName="RandombitsGwtDeprecatedPropertyKeyJavadocTag"
                      key="inspection.name.deprecated.gwt.key.tag.in.javadoc.comments" groupKey="group.gwt.inspections.name"
                      enabledByDefault="true" level="WARNING"
                      implementationClass="org.randombits.intellij.gwt.inspections.GwtDeprecatedPropertyKeyJavadocTagInspection"/>
-    <localInspection language="JAVA" shortName="GwtSetServiceEntryPointCalls"
+    <localInspection language="JAVA" shortName="RandombitsGwtSetServiceEntryPointCalls"
                      key="inspection.name.redundant.set.service.entry.point.methods.calls" groupKey="group.gwt.inspections.name"
                      enabledByDefault="true" level="WARNING"
                      implementationClass="org.randombits.intellij.gwt.inspections.RedundantSetServiceEntryPointMethodCallsInspection"/>
-    <localInspection language="JAVA" shortName="GwtDeprecatedEventListeners"
+    <localInspection language="JAVA" shortName="RandombitsGwtDeprecatedEventListeners"
                      key="inspection.GwtDeprecatedEventListeners.name" groupKey="group.gwt.inspections.name"
                      enabledByDefault="true" level="WARNING"
                      implementationClass="org.randombits.intellij.gwt.inspections.eventListeners.GwtDeprecatedEventListenersInspection"/>
-    <localInspection shortName="GwtUiFieldErrors" key="inspection.GwtUiFieldErrors.name" groupKey="group.gwt.inspections.name"
+    <localInspection shortName="RandombitsGwtUiFieldErrors" key="inspection.GwtUiFieldErrors.name" groupKey="group.gwt.inspections.name"
                      enabledByDefault="true" level="ERROR" implementationClass="org.randombits.intellij.gwt.inspections.GwtUiFieldErrorsInspection"/>
-    <localInspection language="JAVA" shortName="GwtUiHandlerErrors"
+    <localInspection language="JAVA" shortName="RandombitsGwtUiHandlerErrors"
                      key="inspection.GwtUiHandlerErrors.name" groupKey="group.gwt.inspections.name"
                      enabledByDefault="true" level="ERROR" implementationClass="org.randombits.intellij.gwt.inspections.GwtUiHandlerErrorsInspection"/>
-    <localInspection language="JAVA" shortName="GwtCssResourceErrors"
+    <localInspection language="JAVA" shortName="RandombitsGwtCssResourceErrors"
                      key="inspection.GwtCssResourceErrors.name" groupKey="group.gwt.inspections.name"
                      enabledByDefault="true" level="ERROR"
                      implementationClass="org.randombits.intellij.gwt.clientBundle.CssResourceClassErrorsInspection"/>
-    <localInspection language="JAVA" shortName="GwtUiFieldAssignment"
+    <localInspection language="JAVA" shortName="RandombitsGwtUiFieldAssignment"
                      key="inspection.GwtUiFieldAssignment.name" groupKey="group.gwt.inspections.name"
                      enabledByDefault="true" level="WARNING"
                      implementationClass="org.randombits.intellij.gwt.inspections.GwtUiFieldAssignmentInspection"/>
-    <localInspection language="XML" shortName="GwtDefaultPackageNotRegistered"
+    <localInspection language="XML" shortName="RandombitsGwtDefaultPackageNotRegistered"
                      key="inspection.GwtDefaultPackageNotRegistered.name"
                      groupKey="group.gwt.inspections.name" enabledByDefault="true" level="WARNING"
                      implementationClass="org.randombits.intellij.gwt.inspections.GwtDefaultPackageNotRegisteredInspection"/>
-    <localInspection language="XML" shortName="GwtUiXmlReferences"
+    <localInspection language="XML" shortName="RandombitsGwtUiXmlReferences"
                      key="inspection.name.unresolved.references.in.ui.xml.files" groupKey="group.gwt.inspections.name"
                      enabledByDefault="true" level="ERROR"
                      implementationClass="org.randombits.intellij.gwt.inspections.UiXmlUnresolvedReferencesInspection"/>
-    <localInspection language="JAVA" shortName="GwtIncorrectArgumentOfGwtCreateMethod"
+    <localInspection language="JAVA" shortName="RandombitsGwtIncorrectArgumentOfGwtCreateMethod"
                      key="inspection.name.incorrect.argument.of.gwt.create.method" groupKey="group.gwt.inspections.name"
                      enabledByDefault="true" level="ERROR"
                      implementationClass="org.randombits.intellij.gwt.inspections.GwtCreateMethodCallInspection"/>
     <localInspection language="JAVA" groupKey="group.gwt.inspections.name"
-                     key="inspection.GwtUiBinderErrors.name" shortName="GwtUiBinderErrors"
+                     key="inspection.GwtUiBinderErrors.name" shortName="RandombitsGwtUiBinderErrors"
                      enabledByDefault="true" level="ERROR"
                      implementationClass="org.randombits.intellij.gwt.inspections.GwtUiBinderErrorsInspection"/>
 
     <canBeFinal implementation="org.randombits.intellij.gwt.inspections.GwtCanBeFinalHandler"/>
-    <injectedLanguageJavaReferenceSupplier language="GWT JavaScript"/>
+    <injectedLanguageJavaReferenceSupplier language="Randombits GWT JavaScript"/>
 
     <intentionAction>
       <language>XML</language>
@@ -336,7 +336,7 @@
 
     <implicitUsageProvider implementation="org.randombits.intellij.gwt.rpc.GwtSerializableImplicitUsageProvider"/>
 
-    <notificationGroup id="GWT" displayType="BALLOON" bundle="messages.GwtBundle" key="gwt.notification.display.id"/>
+    <notificationGroup id="org.randombits.intellij.gwt.notifications" displayType="BALLOON" bundle="messages.GwtBundle" key="gwt.notification.display.id"/>
 
     <dependencySupport coordinate="com.google.gwt:gwt-user" kind="java" displayName="GWT"/>
     <dependencySupport coordinate="org.gwtproject:gwt-user" kind="java" displayName="GWT"/>
@@ -349,37 +349,37 @@
   </projectListeners>
 
   <actions>
-    <group id="GWT" class="org.randombits.intellij.gwt.actions.GwtCreateActionGroup" popup="true"
+    <group id="org.randombits.intellij.gwt.actions" class="org.randombits.intellij.gwt.actions.GwtCreateActionGroup" popup="true"
            icon="org.randombits.intellij.gwt.icons.GwtIcons.GoogleSmall">
-      <action id="GWT.NewTestCase"
+      <action id="org.randombits.intellij.gwt.actions.NewTestCase"
               class="org.randombits.intellij.gwt.actions.CreateGwtTestCaseAction">
       </action>
-      <action id="GWT.NewModule"
+      <action id="org.randombits.intellij.gwt.actions.NewModule"
               class="org.randombits.intellij.gwt.actions.CreateGwtModuleAction">
       </action>
-      <action id="GWT.NewUiBinder"
+      <action id="org.randombits.intellij.gwt.actions.NewUiBinder"
               class="org.randombits.intellij.gwt.actions.CreateGwtUiBinderAction"/>
-      <action id="GWT.NewUiRenderer"
+      <action id="org.randombits.intellij.gwt.actions.NewUiRenderer"
               class="org.randombits.intellij.gwt.actions.CreateGwtUiRendererAction"/>
-      <action id="GWT.NewEventWithHandler"
+      <action id="org.randombits.intellij.gwt.actions.NewEventWithHandler"
               class="org.randombits.intellij.gwt.actions.CreateGwtEventWithHandlerAction"/>
-      <action id="GWT.NewEntryPoint"
+      <action id="org.randombits.intellij.gwt.actions.NewEntryPoint"
               class="org.randombits.intellij.gwt.actions.CreateGwtEntryPointAction">
       </action>
-      <action id="GWT.NewRemoteService"
+      <action id="org.randombits.intellij.gwt.actions.NewRemoteService"
               class="org.randombits.intellij.gwt.actions.CreateGwtRemoteServiceAction">
       </action>
-      <action id="GWT.NewSerialClass"
+      <action id="org.randombits.intellij.gwt.actions.NewSerialClass"
               class="org.randombits.intellij.gwt.actions.CreateGwtSerializableClassAction">
       </action>
       <add-to-group group-id="NewGroup" anchor="last"/>
     </group>
 
-    <action id="GWT.GenerateUiHandlerMethod" class="org.randombits.intellij.gwt.actions.GenerateUiHandlerMethodAction">
+    <action id="org.randombits.intellij.gwt.actions.GenerateUiHandlerMethod" class="org.randombits.intellij.gwt.actions.GenerateUiHandlerMethodAction">
       <add-to-group group-id="GenerateGroup" anchor="last"/>
     </action>
 
-    <action id="GWT.GenerateCompileReport" class="org.randombits.intellij.gwt.make.report.GenerateCompileReportAction"
+    <action id="org.randombits.intellij.gwt.actions.GenerateCompileReport" class="org.randombits.intellij.gwt.make.report.GenerateCompileReportAction"
             icon="org.randombits.intellij.gwt.icons.GwtIcons.GoogleSmall">
       <add-to-group group-id="ToolsMenu" anchor="last"/>
     </action>

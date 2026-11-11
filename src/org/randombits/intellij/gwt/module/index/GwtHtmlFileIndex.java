@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public final class GwtHtmlFileIndex extends ScalarIndexExtension<String> {
-  private static final ID<String,Void> NAME = ID.create("GwtHtmlFile");
+  private static final ID<String,Void> NAME = ID.create("org.randombits.intellij.gwt.GwtHtmlFile");
 
   @Override
   public @NotNull ID<String, Void> getName() {

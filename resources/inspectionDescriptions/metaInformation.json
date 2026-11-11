@@ -1,7 +1,7 @@
 {
   "inspections": [
     {
-      "id": "NonSerializableServiceParameters",
+      "id": "RandombitsNonSerializableServiceParameters",
       "codeQualityCategory": "Reliability"
     },
     {

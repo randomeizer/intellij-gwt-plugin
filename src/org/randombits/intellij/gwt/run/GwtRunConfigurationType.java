@@ -29,7 +29,7 @@ import org.jetbrains.annotations.NotNull;
 
 public final class GwtRunConfigurationType extends ConfigurationTypeBase {
   GwtRunConfigurationType() {
-    super("GWT.ConfigurationType",
+    super("org.randombits.intellij.gwt.run.ConfigurationType",
           GwtBundle.message("run.gwt.configuration.display.name"),
           GwtBundle.message("run.gwt.configuration.description"),
           NotNullLazyValue.createValue(() -> GwtIcons.GoogleSmall));

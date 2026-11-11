@@ -22,7 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public final class GwtModuleRenameToIndex extends ScalarIndexExtension<String> {
-  private static final ID<String,Void> NAME = ID.create("GwtXmlFile");
+  private static final ID<String,Void> NAME = ID.create("org.randombits.intellij.gwt.GwtXmlFile");
   public static final class Holder {
     public static final FileBasedIndex.InputFilter GWT_XML_FILE_INPUT_FILTER = new DefaultFileTypeSpecificInputFilter(XmlFileType.INSTANCE) {
       @Override
