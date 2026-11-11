@@ -265,7 +265,7 @@ public final class GwtInconsistentLocalizableInterfaceInspection extends BaseGwt
       }
 
       if (editor != null) {
-        final JList list = new JBList(myPropertiesFiles);
+        final JList<PropertiesFile> list = new JBList<>(myPropertiesFiles);
         final PropertiesFilesListCellRenderer renderer = new PropertiesFilesListCellRenderer();
         list.setCellRenderer(renderer);
         list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
