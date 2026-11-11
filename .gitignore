@@ -1,6 +1,10 @@
 # Gradle
 .gradle/
-**/build/
+/build/
+/dev/build/
+/jps-plugin/build/
+/runtime/build/
+/spring/build/
 
 # IntelliJ Platform Gradle Plugin downloads and sandboxes
 .intellijPlatform/

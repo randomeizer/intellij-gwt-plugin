@@ -15,7 +15,7 @@
  */
 syntax = "proto2";
 
-package com.intellij.gwt.shell.remoteUi.generated;
+package org.randombits.intellij.gwt.shell.remoteUi.generated;
 
 /*
  * Notes:

@@ -3,7 +3,7 @@ plugins {
     id("java")
 }
 
-group = "com.intellij.gwt.rt"
+group = "org.randombits.intellij.gwt.rt"
 
 repositories {
     mavenCentral()

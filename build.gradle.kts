@@ -10,7 +10,7 @@ plugins {
     id("org.jetbrains.intellij.platform") version "2.18.1"
 }
 
-group = "com.intellij.gwt"
+group = "org.randombits.intellij.gwt"
 version = properties("pluginVersion")
 
 repositories {
@@ -59,7 +59,7 @@ dependencies {
     // protobuf-lite runtime for the generated RemoteMessageProto sources
     implementation("com.google.protobuf:protobuf-javalite:3.25.5")
 
-    // main sources reference org.jetbrains.jps.gwt.* classes at compile time;
+    // main sources reference org.randombits.intellij.gwt.jps.* classes at compile time;
     // runtimeOnly ships gwt-jps into the distribution for the external build process.
     compileOnly(project(":jps-plugin"))
     runtimeOnly(project(":jps-plugin"))

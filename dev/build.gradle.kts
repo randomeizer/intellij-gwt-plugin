@@ -8,7 +8,7 @@ plugins {
     id("org.jetbrains.intellij.platform.module")
 }
 
-group = "com.intellij.gwt.dev"
+group = "org.randombits.intellij.gwt.dev"
 
 repositories {
     mavenCentral()
@@ -44,11 +44,11 @@ tasks {
 
     // The platform resolves a content module's isolated jar by the exact path
     // lib/modules/<content-module-name>.jar (PluginDescriptorLoader.loadPluginSubDescriptors).
-    // The default composed-jar name would be "GWT.dev.jar", which does not match the
-    // <module name="intellij.gwt.dev"/> declared in the root plugin.xml <content> block,
+    // The default composed-jar name is based on the root project name and does not match the
+    // <module name="org.randombits.intellij.gwt.dev"/> declared in the root plugin.xml <content> block,
     // so the module would fail to load (fallback to the main classpath cannot find its
     // descriptor). Name the jar after the module so it loads with its own classloader.
     named<ComposedJarTask>("composedJar") {
-        archiveBaseName = "intellij.gwt.dev"
+        archiveBaseName = "org.randombits.intellij.gwt.dev"
     }
 }

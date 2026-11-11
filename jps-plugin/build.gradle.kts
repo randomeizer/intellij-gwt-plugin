@@ -1,4 +1,6 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
+import org.jetbrains.intellij.platform.gradle.tasks.ComposedJarTask
+
 fun properties(key: String) = project.findProperty(key).toString()
 
 plugins {
@@ -6,7 +8,7 @@ plugins {
     id("org.jetbrains.intellij.platform.module")
 }
 
-group = "com.intellij.gwt.jps"
+group = "org.randombits.intellij.gwt.jps"
 
 repositories {
     mavenCentral()
@@ -38,5 +40,9 @@ tasks {
     withType<JavaCompile> {
         sourceCompatibility = "11"
         targetCompatibility = "11"
+    }
+
+    named<ComposedJarTask>("composedJar") {
+        archiveBaseName = "randombits-gwt-jps"
     }
 }

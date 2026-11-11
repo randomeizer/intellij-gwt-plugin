@@ -1,11 +1,13 @@
-# IntelliJ GWT Plugin
+# Randombits GWT Support
 
-Standalone source for the IntelliJ IDEA GWT plugin (`com.intellij.gwt`), extracted from
+Standalone source for an independently maintained IntelliJ IDEA GWT plugin
+(`org.randombits.intellij.gwt`), extracted from
 [JetBrains/intellij-obsolete-plugins](https://github.com/JetBrains/intellij-obsolete-plugins/tree/master/gwt).
 The plugin adds Google Web Toolkit support to IntelliJ IDEA Ultimate.
 
-The plugin is available on the [JetBrains Marketplace](https://plugins.jetbrains.com/plugin/14590-gwt).
-This repository is independently maintained and is not an official JetBrains support channel.
+The [JetBrains Marketplace GWT listing](https://plugins.jetbrains.com/plugin/14590-gwt) is the
+separate JetBrains plugin; this repository's plugin is not that listing or an official JetBrains
+support channel.
 
 ## Compatibility and build
 
