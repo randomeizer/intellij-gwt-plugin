@@ -72,6 +72,8 @@ dependencies {
     implementation(project(":runtime"))
 
     testImplementation("junit:junit:4.13.2")
+    // SDK path tests exercise the Maven and Gradle resolvers from the JPS module.
+    testImplementation(project(":jps-plugin"))
     testImplementation(platform("org.junit:junit-bom:5.13.4"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
