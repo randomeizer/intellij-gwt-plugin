@@ -118,6 +118,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -742,13 +743,21 @@ public final class GwtCommandLineState extends JavaCommandLineStateEx {
     }
   }
 
-  private static class GwtDevModeProcessListener extends ProcessAdapter {
+  private class GwtDevModeProcessListener extends ProcessAdapter {
 
     private boolean myOpenUrl;
+    private final AtomicBoolean myBrowserOpenRequested = new AtomicBoolean();
     private final OutputLineReader myLineReader = new DelegatingOutputLineReader(this::parseLine);
 
     @Override
     public void onTextAvailable(@NotNull ProcessEvent event, @NotNull Key outputType) {
+      if (myRunConfigurationState.USE_SUPER_DEV_MODE && event.getText().contains("The code server is ready at")) {
+        String url = GwtSuperDevModeUrlBuilder.buildUrl(myRunConfigurationState.RUN_PAGE,
+                                                        myPatchedShellParametersList.getParameters());
+        if (url != null) {
+          openBrowser(url);
+        }
+      }
       if (ProcessOutputType.isStderr(outputType)) {
         myLineReader.parseOutput(event.getText());
       }
@@ -760,10 +769,24 @@ public final class GwtCommandLineState extends JavaCommandLineStateEx {
       }
       else if (!line.equals("the following URL:")) {
         if (myOpenUrl) {
-          BrowserUtil.browse(line);
+          openBrowser(line);
         }
         myOpenUrl = false;
       }
+    }
+
+    private void openBrowser(@NotNull String url) {
+      if (!myRunConfigurationState.OPEN_IN_BROWSER || !myBrowserOpenRequested.compareAndSet(false, true)) {
+        return;
+      }
+      ApplicationManager.getApplication().invokeLater(() -> {
+        if (myUiConnection != null) {
+          myUiConnection.openBrowserOnce(url);
+        }
+        else {
+          BrowserUtil.browse(url);
+        }
+      });
     }
   }
 
