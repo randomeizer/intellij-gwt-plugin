@@ -42,7 +42,7 @@ import com.intellij.util.messages.MessageBusConnection;
 import com.intellij.util.ui.update.DebouncedUpdates;
 import com.intellij.util.ui.update.UpdateQueue;
 import com.intellij.util.xmlb.XmlSerializer;
-import com.intellij.webcore.ModuleHelper;
+import com.intellij.openapi.module.ModuleManager;
 import kotlinx.coroutines.CoroutineScope;
 import org.jdom.Element;
 import org.jdom.JDOMException;
@@ -197,7 +197,7 @@ public final class GwtSourcePathsRefresher implements Disposable {
   private @NotNull Set<GwtSourcePath> getPaths(Function<GwtModule, Map<VirtualFile, GwtRelativePath>> getPaths) {
     GwtModulesManager gwtModulesManager = GwtModulesManager.getInstance(myProject);
     Set<GwtSourcePath> sourcePaths = new HashSet<>();
-    for (Module module : ModuleHelper.getModules(myProject)) {
+    for (Module module : ModuleManager.getInstance(myProject).getModules()) {
       ProgressManager.checkCanceled();
 
       GwtFacet gwtFacet = GwtFacet.getInstance(module);

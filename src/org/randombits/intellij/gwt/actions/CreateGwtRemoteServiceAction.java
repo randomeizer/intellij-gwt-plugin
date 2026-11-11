@@ -16,6 +16,7 @@
 
 package org.randombits.intellij.gwt.actions;
 
+import org.randombits.intellij.gwt.web.GwtWebSupport;
 import org.randombits.intellij.gwt.GwtBundle;
 import org.randombits.intellij.gwt.facet.GwtFacet;
 import org.randombits.intellij.gwt.module.model.GwtModule;
@@ -24,9 +25,6 @@ import org.randombits.intellij.gwt.rpc.GwtServletUtil;
 import org.randombits.intellij.gwt.rpc.RemoteServiceUtil;
 import org.randombits.intellij.gwt.templates.GwtTemplates;
 import com.intellij.ide.highlighter.JavaFileType;
-import com.intellij.javaee.web.WebUtil;
-import com.intellij.javaee.web.facet.WebFacet;
-import com.intellij.javaee.web.model.xml.WebApp;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiClass;
@@ -36,7 +34,6 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiUtilCore;
 import com.intellij.psi.xml.XmlFile;
 import com.intellij.util.IncorrectOperationException;
-import com.intellij.util.xml.DomUtil;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -72,14 +69,10 @@ public class CreateGwtRemoteServiceAction extends GwtCreateActionBase {
   @Override
   protected PsiFile[] getAffectedFiles(final GwtModule gwtModule) {
     final XmlFile xmlFile = gwtModule.getModuleXmlFile();
-    if (xmlFile != null) {
-      final WebFacet webFacet = WebUtil.getWebFacet(xmlFile);
-      if (webFacet != null) {
-        final WebApp webApp = webFacet.getRoot();
-        if (webApp != null) {
-          return new PsiFile[]{xmlFile, DomUtil.getFile(webApp)};
-        }
-      }
+    GwtWebSupport webSupport = GwtWebSupport.getInstance();
+    if (xmlFile != null && webSupport != null) {
+      PsiFile webXml = webSupport.getWebXmlFile(xmlFile);
+      if (webXml != null) return new PsiFile[]{xmlFile, webXml};
     }
     return new PsiFile[] {xmlFile};
   }
@@ -110,13 +103,8 @@ public class CreateGwtRemoteServiceAction extends GwtCreateActionBase {
     gwtServlet.getPath().setValue(servletPath);
     gwtServlet.getServletClass().setValue(servletImpl.getQualifiedName());
 
-    final WebFacet webFacet = WebUtil.getWebFacet(xml);
-    if (webFacet != null) {
-      final WebApp webApp = webFacet.getRoot();
-      if (webApp != null) {
-        GwtServletUtil.registerServletForService(gwtFacet, gwtModule, webApp, servletImpl, serviceName);
-      }
-    }
+    GwtWebSupport webSupport = GwtWebSupport.getInstance();
+    if (webSupport != null) webSupport.registerServlet(gwtFacet, gwtModule, xml, servletImpl, serviceName);
 
     return PsiUtilCore.toPsiElementArray(res);
   }

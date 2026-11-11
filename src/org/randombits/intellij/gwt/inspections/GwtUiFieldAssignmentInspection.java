@@ -4,11 +4,11 @@ import com.intellij.codeHighlighting.HighlightDisplayLevel;
 import com.intellij.codeInspection.InspectionManager;
 import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.codeInspection.ProblemHighlightType;
+import org.randombits.intellij.gwt.GwtAnnotationUtil;
 import org.randombits.intellij.gwt.GwtBundle;
 import org.randombits.intellij.gwt.uiBinder.UiBinderUtil;
 import org.randombits.intellij.gwt.uiBinder.mapping.UiBinderMappingService;
 import com.intellij.java.syntax.parser.JavaKeywords;
-import com.intellij.javaee.model.annotations.AnnotationModelUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.JavaPsiFacade;
 import com.intellij.psi.JavaRecursiveElementWalkingVisitor;
@@ -45,8 +45,8 @@ public final class GwtUiFieldAssignmentInspection extends BaseGwtInspection {
             if (modifierList != null) {
               final PsiAnnotation annotation = modifierList.findAnnotation(UiBinderUtil.UI_FIELD_ANNOTATION);
               if (annotation != null) {
-                final Boolean provided = AnnotationModelUtil.getBooleanValue(annotation, UiBinderUtil.PROVIDED_ANNOTATION_ATTRIBUTE, false).getValue();
-                if (provided == null || !provided) {
+                final Object provided = GwtAnnotationUtil.getValue(annotation, UiBinderUtil.PROVIDED_ANNOTATION_ATTRIBUTE);
+                if (!Boolean.TRUE.equals(provided)) {
                   final String message = GwtBundle.message("inspection.message.assignment.to.uifield.annotated.field.will.be.ignored");
                   final SetProvidedAttributeQuickFix fix = new SetProvidedAttributeQuickFix(annotation);
                   problems.add(manager.createProblemDescriptor(expression, message, fix, ProblemHighlightType.GENERIC_ERROR_OR_WARNING, isOnTheFly));

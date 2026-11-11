@@ -115,7 +115,7 @@ public class MiscReferencesTest extends GwtReferencesTestCase {
 
   private void doTestServletReferences(final String fileName, GwtVersion version) {
     final VirtualFile dir = addGwtModule("references/service/src", myModule, version);
-    addWebFacet(GwtFacet.getInstance(getModule()), getGwtTestDataPath(), "references/service/web/WEB-INF/web.xml");
+    org.randombits.intellij.gwt.GwtWebTestUtil.addWebFacet(GwtFacet.getInstance(getModule()), getGwtTestDataPath(), "references/service/web/WEB-INF/web.xml");
     final VirtualFile file = dir.findFileByRelativePath("client/MyService.java");
     assertNotNull(file);
 

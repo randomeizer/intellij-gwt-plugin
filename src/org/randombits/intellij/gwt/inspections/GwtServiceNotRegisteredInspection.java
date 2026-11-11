@@ -16,6 +16,8 @@
 
 package org.randombits.intellij.gwt.inspections;
 
+import org.randombits.intellij.gwt.web.GwtWebServletUtil;
+import org.randombits.intellij.gwt.web.GwtWebSupportImpl;
 import com.intellij.codeInsight.AnnotationUtil;
 import com.intellij.codeInspection.InspectionManager;
 import com.intellij.codeInspection.LocalQuickFix;
@@ -27,7 +29,6 @@ import org.randombits.intellij.gwt.module.GwtModulesManager;
 import org.randombits.intellij.gwt.module.model.GwtModule;
 import org.randombits.intellij.gwt.rpc.GwtServletUtil;
 import org.randombits.intellij.gwt.rpc.RemoteServiceUtil;
-import org.randombits.intellij.gwt.web.GwtWebUtil;
 import com.intellij.javaee.constants.JavaeeCommonConstants;
 import com.intellij.javaee.web.CommonServlet;
 import com.intellij.javaee.web.WebUtil;
@@ -214,7 +215,7 @@ public final class GwtServiceNotRegisteredInspection extends BaseGwtInspection {
     }
 
     String serviceName = service.getName();
-    final WebFacet webFacet = facet.getWebFacet();
+    final WebFacet webFacet = GwtWebSupportImpl.getWebFacet(facet);
     if (webFacet == null) {
       if (!facet.getSdkVersion().isHostedModeRequiresWebXml()) {
         return null;
@@ -246,7 +247,7 @@ public final class GwtServiceNotRegisteredInspection extends BaseGwtInspection {
     final WebApp webApp = webFacet.getRoot();
     if (webApp == null) return null;
 
-    Servlet servlet = GwtServletUtil.findServlet(webApp, aClass);
+    Servlet servlet = GwtWebServletUtil.findServlet(webApp, aClass);
     if (servlet == null) {
       String message = GwtBundle.message("problem.description.remote.service.is.not.registered.as.a.servlet.in.web.xml", serviceName);
       RegisterServiceQuickFix quickFix = new RegisterServiceQuickFix(facet, gwtModule, webApp, aClass, serviceName, webFacet);
@@ -275,11 +276,11 @@ public final class GwtServiceNotRegisteredInspection extends BaseGwtInspection {
 
       final VirtualFile root = findContentRoot();
       LOG.assertTrue(root != null, myGwtModule.getModuleFile());
-      final WebFacet webFacet = GwtWebUtil.createWebFacet(myFacet, root);
+      final WebFacet webFacet = GwtWebSupportImpl.createWebFacet(myFacet, root);
 
       final WebApp webApp = webFacet.getRoot();
       LOG.assertTrue(webApp != null);
-      GwtServletUtil.registerServletForService(myFacet, myGwtModule, webApp, serviceImpl, myServiceName);
+      GwtWebServletUtil.registerServletForService(myFacet, myGwtModule, webApp, serviceImpl, myServiceName);
     }
 
     private @Nullable VirtualFile findContentRoot() {
@@ -302,9 +303,9 @@ public final class GwtServiceNotRegisteredInspection extends BaseGwtInspection {
 
     RegisterServiceQuickFix(final GwtFacet facet, final GwtModule gwtModule, final WebApp webApp, final PsiClass serviceImpl,
                                    final String serviceName, @NotNull WebFacet webFacet) {
-      super(webFacet.equals(facet.getWebFacet()) ? GwtBundle.message("quickfix.family.name.register.remote.service.in.web.xml")
+      super(webFacet.equals(GwtWebSupportImpl.getWebFacet(facet)) ? GwtBundle.message("quickfix.family.name.register.remote.service.in.web.xml")
                                                  : GwtBundle.message("quickfix.family.name.connect.gwt.facet.and.register.remote.service.in.web.xml"),
-            webFacet.equals(facet.getWebFacet()) ? GwtBundle.message("quickfix.name.register.remote.service.0.in.web.xml", serviceName)
+            webFacet.equals(GwtWebSupportImpl.getWebFacet(facet)) ? GwtBundle.message("quickfix.name.register.remote.service.0.in.web.xml", serviceName)
                                                  : GwtBundle.message("quickfix.name.connect.gwt.facet.to.0.facet.and.register.remote.service.1.in.web.xml", webFacet.getName(), serviceName),
             serviceImpl);
       myFacet = facet;
@@ -320,10 +321,10 @@ public final class GwtServiceNotRegisteredInspection extends BaseGwtInspection {
 
       if (!ReadonlyStatusHandler.getInstance(project)
         .ensureFilesWritable(Collections.singletonList(DomUtil.getFile(myWebApp).getVirtualFile())).hasReadonlyFiles()) {
-        if (!myWebFacet.equals(myFacet.getWebFacet())) {
+        if (!myWebFacet.equals(GwtWebSupportImpl.getWebFacet(myFacet))) {
           myFacet.getConfiguration().setWebFacetName(myWebFacet.getName());
         }
-        GwtServletUtil.registerServletForService(myFacet, myGwtModule, myWebApp, serviceImpl, myServiceName);
+        GwtWebServletUtil.registerServletForService(myFacet, myGwtModule, myWebApp, serviceImpl, myServiceName);
       }
     }
   }
@@ -360,7 +361,7 @@ public final class GwtServiceNotRegisteredInspection extends BaseGwtInspection {
     @Override
     public void applyFix(final @NotNull Project project, final @NotNull ProblemDescriptor descriptor) {
       if (myExistingMapping == null) {
-        GwtServletUtil.addServletMapping(myRoot, myServlet, myUrlPattern);
+        GwtWebServletUtil.addServletMapping(myRoot, myServlet, myUrlPattern);
       }
       else {
         List<GenericDomValue<String>> urlPatterns = myExistingMapping.getUrlPatterns();

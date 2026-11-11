@@ -1,5 +1,6 @@
 package org.randombits.intellij.gwt.maven;
 
+import org.randombits.intellij.gwt.web.GwtWebSupport;
 import org.randombits.intellij.gwt.facet.GwtFacet;
 import org.randombits.intellij.gwt.facet.GwtFacetArtifactValidator;
 import org.randombits.intellij.gwt.facet.GwtFacetConfiguration;
@@ -9,9 +10,6 @@ import org.randombits.intellij.gwt.module.model.GwtModule;
 import org.randombits.intellij.gwt.packaging.GwtCompileOutputRelativePathSuggester;
 import org.randombits.intellij.gwt.packaging.GwtCompilerOutputElement;
 import org.randombits.intellij.gwt.sdk.GwtDependenciesStorage;
-import com.intellij.javaee.web.WebRoot;
-import com.intellij.javaee.web.facet.WebFacet;
-import com.intellij.javaee.web.facet.WebFacetType;
 import com.intellij.openapi.application.WriteAction;
 import com.intellij.openapi.externalSystem.project.PackagingModifiableModel;
 import com.intellij.openapi.externalSystem.service.project.IdeModifiableModelsProvider;
@@ -154,12 +152,10 @@ public abstract class GwtFacetImporter extends FacetImporter<GwtFacet, GwtFacetC
         setupGwtSdk(facet, project);
         setupGwtCompilerOptions(facet.getConfiguration(), module, project);
 
-        WebFacet webFacet = findFacet(modelsProvider1.getModifiableFacetModel(module), WebFacetType.getInstance(), "Web");
-        if (webFacet != null) {
-          facet.getConfiguration().setWebFacetName(webFacet.getName());
-        }
-
-        addGwtCompilerOutputToArtifact(modelsProvider1, module, facet, project, webFacet);
+        GwtWebSupport webSupport = GwtWebSupport.getInstance();
+        List<String> webRootUrls = webSupport == null ? List.of()
+          : webSupport.associateWebFacet(facet, modelsProvider1.getModifiableFacetModel(module));
+        addGwtCompilerOutputToArtifact(modelsProvider1, module, facet, project, webRootUrls);
         WriteAction.run(() -> {
           modelsProvider1.commit();
         });
@@ -195,7 +191,7 @@ public abstract class GwtFacetImporter extends FacetImporter<GwtFacet, GwtFacetC
   }
 
   private void addGwtCompilerOutputToArtifact(IdeModifiableModelsProvider modelsProvider, Module module, GwtFacet facet,
-                                              MavenProject project, WebFacet webFacet) {
+                                              MavenProject project, List<String> webRootUrls) {
     String gwtOutputPath = findValueInGoalConfigAndThenInPluginConfig(project, "compile", "webappDirectory");
     if (gwtOutputPath != null) {
       gwtOutputPath = FileUtil.toSystemIndependentName(gwtOutputPath);
@@ -204,7 +200,7 @@ public abstract class GwtFacetImporter extends FacetImporter<GwtFacet, GwtFacetC
     PackagingModifiableModel packagingModel = modelsProvider.getModifiableModel(PackagingModifiableModel.class);
     final ModifiableArtifactModel artifactModel = packagingModel.getModifiableArtifactModel();
     final String artifactName = getArtifactName("war", module, true);
-    final Artifact webArtifact = artifactModel.findArtifact(artifactName);
+    final Artifact webArtifact = GwtWebSupport.getInstance() == null ? null : artifactModel.findArtifact(artifactName);
 
     String relativePath =
       GwtCompileOutputRelativePathSuggester.suggestRelativeOutputPath(facet, packagingModel.getPackagingElementResolvingContext());
@@ -214,7 +210,7 @@ public abstract class GwtFacetImporter extends FacetImporter<GwtFacet, GwtFacetC
       targetArtifact = artifactModel.getOrCreateModifiableArtifact(webArtifact);
 
       if (!StringUtil.isEmpty(gwtOutputPath) && !StringUtil.isEmpty(artifactOutput)) {
-        String gwtOutputRelativePath = getGwtOutputRelativePath(gwtOutputPath, artifactOutput, webFacet);
+        String gwtOutputRelativePath = getGwtOutputRelativePath(gwtOutputPath, artifactOutput, webRootUrls);
         if (gwtOutputRelativePath != null) {
           relativePath = gwtOutputRelativePath;
         }
@@ -241,12 +237,12 @@ public abstract class GwtFacetImporter extends FacetImporter<GwtFacet, GwtFacetC
     PackagingElementFactory.getInstance().getOrCreateDirectory(targetArtifact.getRootElement(), relativePath).addOrFindChild(element);
   }
 
-  private static @Nullable String getGwtOutputRelativePath(String gwtOutputPath, String artifactOutput, WebFacet webFacet) {
+  private static @Nullable String getGwtOutputRelativePath(String gwtOutputPath, String artifactOutput, List<String> webRootUrls) {
     if (FileUtil.startsWith(gwtOutputPath, artifactOutput)) {
       return FileUtil.getRelativePath(artifactOutput, gwtOutputPath, '/');
     }
-    for (WebRoot root : webFacet.getWebRoots()) {
-      String webRootPath = VfsUtilCore.urlToPath(root.getDirectoryUrl());
+    for (String rootUrl : webRootUrls) {
+      String webRootPath = VfsUtilCore.urlToPath(rootUrl);
       if (FileUtil.startsWith(gwtOutputPath, webRootPath)) {
         return FileUtil.getRelativePath(webRootPath, gwtOutputPath, '/');
       }

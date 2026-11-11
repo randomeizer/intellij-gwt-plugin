@@ -6,7 +6,8 @@ import org.randombits.intellij.gwt.GwtTestCase;
 import org.randombits.intellij.gwt.facet.GwtFacet;
 import org.randombits.intellij.gwt.sdk.impl.GwtVersionImpl;
 import com.intellij.openapi.application.WriteAction;
-import com.intellij.javaee.web.facet.WebFacet;
+import org.randombits.intellij.gwt.web.GwtWebUtil;
+import org.randombits.intellij.gwt.GwtWebTestUtil;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.projectRoots.JavaSdk;
 import com.intellij.openapi.projectRoots.ProjectJdkTable;
@@ -85,9 +86,8 @@ public abstract class GwtInspectionsTestCase extends JavaInspectionTestCase {
 
         String webXmlPath = getTestName(true) + "/src/web.xml";
         String webXmlPathFullPath = getTestDataPath() + "/" + webXmlPath;
-        if (LocalFileSystem.getInstance().findFileByPath(webXmlPathFullPath) != null) {
-          WebFacet webFacet = GwtTestCase.addWebFacet(gwtFacet, getTestDataPath(), webXmlPath);
-          assertSame(webFacet, gwtFacet.getWebFacet());
+        if (GwtWebUtil.isWebSupportAvailable() && LocalFileSystem.getInstance().findFileByPath(webXmlPathFullPath) != null) {
+          GwtWebTestUtil.addWebFacet(gwtFacet, getTestDataPath(), webXmlPath);
         }
       }
     };

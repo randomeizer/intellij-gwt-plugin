@@ -1,15 +1,14 @@
 package org.randombits.intellij.gwt.references;
 
+import org.randombits.intellij.gwt.web.GwtWebSupport;
 import org.randombits.intellij.gwt.i18n.GwtI18nUtil;
 import org.randombits.intellij.gwt.i18n.GwtPropertyReference;
 import org.randombits.intellij.gwt.junit.GwtJUnitConstants;
 import org.randombits.intellij.gwt.module.index.GwtHtmlUtil;
 import org.randombits.intellij.gwt.module.model.GwtModule;
 import org.randombits.intellij.gwt.module.model.GwtServlet;
-import org.randombits.intellij.gwt.rpc.GwtServletUtil;
 import org.randombits.intellij.gwt.rpc.RemoteServiceUtil;
 import org.randombits.intellij.gwt.sdk.GwtVersion;
-import com.intellij.javaee.web.CommonServlet;
 import com.intellij.lang.html.HTMLLanguage;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.patterns.*;
@@ -109,10 +108,8 @@ public final class GwtReferenceContributor extends PsiReferenceContributor {
       if (gwtModule != null) {
         final GwtVersion version = getGwtVersion(gwtModule);
         if (version != null && version.isHostedModeRequiresWebXml()) {
-          final CommonServlet servlet = GwtServletUtil.findServletByPath(gwtModule, myValue);
-          if (servlet != null) {
-            return servlet.getXmlTag();
-          }
+          GwtWebSupport webSupport = GwtWebSupport.getInstance();
+          return webSupport == null ? null : webSupport.findServletTag(gwtModule, myValue);
         }
         else {
           for (GwtServlet servlet : gwtModule.getServlets()) {
@@ -137,7 +134,8 @@ public final class GwtReferenceContributor extends PsiReferenceContributor {
       if (module != null) {
         final GwtVersion version = getGwtVersion(module);
         if (version != null && version.isHostedModeRequiresWebXml()) {
-          final List<String> paths = GwtServletUtil.getAllGwtServletsPaths(module);
+          GwtWebSupport webSupport = GwtWebSupport.getInstance();
+          final List<String> paths = webSupport == null ? List.of() : webSupport.getServletPaths(module);
           return ArrayUtilRt.toStringArray(paths);
         }
         else {
