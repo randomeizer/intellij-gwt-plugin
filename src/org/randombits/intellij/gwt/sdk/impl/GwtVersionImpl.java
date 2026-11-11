@@ -24,9 +24,10 @@ public enum GwtVersionImpl implements GwtVersion {
   VERSION_2_8,
   VERSION_2_9,
   VERSION_2_10,
-  VERSION_2_11;
+  VERSION_2_11,
+  VERSION_2_12;
 
-  public static final GwtVersionImpl LATEST = VERSION_2_11;
+  public static final GwtVersionImpl LATEST = VERSION_2_12;
 
   private static final @NonNls String[] GWT_15_SAMPLE_TEMPLATES = {
       "java/client/App.java.ft",
@@ -200,7 +201,8 @@ public enum GwtVersionImpl implements GwtVersion {
   @Override
   public String getGwtModuleDocTypeString() {
     if (isAtLeast(VERSION_2_4)) {
-      String version = isAtLeast(VERSION_2_8) ? "2.8.0"
+      String version = isAtLeast(VERSION_2_12) ? "2.12.2"
+                     : isAtLeast(VERSION_2_8) ? "2.8.0"
                      : isAtLeast(VERSION_2_7) ? "2.7.0"
                      : isAtLeast(VERSION_2_6) ? "2.6.0"
                      : isAtLeast(VERSION_2_5) ? "2.5.0"
