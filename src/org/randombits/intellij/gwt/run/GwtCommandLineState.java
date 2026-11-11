@@ -19,6 +19,7 @@ import com.intellij.execution.DefaultExecutionResult;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.ExecutionResult;
 import com.intellij.execution.Executor;
+import com.intellij.execution.ShortenCommandLine;
 import com.intellij.execution.configurations.JavaParameters;
 import com.intellij.execution.configurations.ParametersList;
 import com.intellij.execution.executors.DefaultDebugExecutor;
@@ -322,16 +323,20 @@ public final class GwtCommandLineState extends JavaCommandLineStateEx {
     }
     params.setMainClass(sdkVersion.getDevModeClass());
 
-    // Always shorten a potentially long classpath via a classpath file rather than passing it literally: otherwise a
-    // classpath exceeding the OS command-line limit (~33k chars) is silently truncated and tail dependencies such as
-    // cern.colt.map.OpenIntObjectHashMap end up missing at runtime (IDEA-380767). Never use the 'manifest JAR' method:
-    // the GWT dev/compiler manually searches for resources in URLs returned by URLClassLoader#getURLs, which does not
-    // work with a manifest JAR. This mirrors the JPS compiler side (GwtBuilder#buildJavaCommandLine, useClasspathJar=false).
-    params.setClasspathFile(true);
-    params.setUseDynamicClasspath(true);
+    // Use Java argument files where supported so the complete classpath reaches the launcher without a wrapper.
+    // GWT manually searches for resources in URLs returned by URLClassLoader#getURLs, so the manifest JAR method
+    // cannot be used. Keep the classpath-file wrapper only for pre-modular JDKs that do not support argument files.
+    ShortenCommandLine defaultMethod = ShortenCommandLine.getDefaultMethodForJdkLevel(params.getJdkPath());
+    params.setShortenCommandLine(getDevModeShortenCommandLineMethod(defaultMethod));
 
     myServer.patchParameters(params, getOutputDir().getAbsolutePath(), myFacet);
     return params;
+  }
+
+  static @NotNull ShortenCommandLine getDevModeShortenCommandLineMethod(@NotNull ShortenCommandLine defaultMethod) {
+    return defaultMethod == ShortenCommandLine.ARGS_FILE
+           ? ShortenCommandLine.ARGS_FILE
+           : ShortenCommandLine.CLASSPATH_FILE;
   }
 
   private void addGwtModules(ParametersList programParameters) {
