@@ -29,7 +29,6 @@ public class SomeWidget extends BaseWidget {
 
   @UiField Element elementWithoutSpecialClass;
 
-  @UiField elemental2.dom.HTMLDivElement elementalDiv;
   @UiField CustomJsElement customElement;
   @UiField UnannotatedElement unannotatedElement;
   @UiField(provided = true) CustomJsElement providedElement;

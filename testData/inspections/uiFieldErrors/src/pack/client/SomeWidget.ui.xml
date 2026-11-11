@@ -19,7 +19,6 @@
     <g:Button ui:field="myIncorrectProvidedFieldOfSuperType"/>
 
     <sup ui:field="elementWithoutSpecialClass"/>
-    <div ui:field="elementalDiv"/>
     <div ui:field="customElement"/>
     <div ui:field="unannotatedElement"/>
     <div ui:field="providedElement"/>

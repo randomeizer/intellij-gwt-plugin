@@ -67,7 +67,22 @@
   </problem>
   <problem>
     <file>SomeWidget.java</file>
+    <line>33</line>
+    <description>Expected</description>
+  </problem>
+  <problem>
+    <file>SomeWidget.java</file>
     <line>34</line>
+    <description>Expected</description>
+  </problem>
+  <problem>
+    <file>SomeWidget.ui.xml</file>
+    <line>23</line>
+    <description>Expected</description>
+  </problem>
+  <problem>
+    <file>SomeWidget.ui.xml</file>
+    <line>24</line>
     <description>Expected</description>
   </problem>
   <problem>
@@ -77,22 +92,7 @@
   </problem>
   <problem>
     <file>SomeWidget.ui.xml</file>
-    <line>24</line>
-    <description>Expected</description>
-  </problem>
-  <problem>
-    <file>SomeWidget.ui.xml</file>
     <line>25</line>
-    <description>Expected</description>
-  </problem>
-  <problem>
-    <file>SomeWidget.java</file>
-    <line>36</line>
-    <description>Expected</description>
-  </problem>
-  <problem>
-    <file>SomeWidget.ui.xml</file>
-    <line>26</line>
     <description>Expected</description>
   </problem>
 </problems>
