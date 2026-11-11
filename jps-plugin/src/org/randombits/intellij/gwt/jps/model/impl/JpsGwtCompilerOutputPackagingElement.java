@@ -2,6 +2,7 @@ package org.randombits.intellij.gwt.jps.model.impl;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.jps.model.JpsElementChildRole;
+import org.jetbrains.jps.model.JpsElementFactory;
 import org.jetbrains.jps.model.artifact.elements.JpsPackagingElement;
 import org.jetbrains.jps.model.ex.JpsCompositeElementBase;
 import org.jetbrains.jps.model.ex.JpsElementChildRoleBase;
@@ -19,19 +20,12 @@ public class JpsGwtCompilerOutputPackagingElement extends JpsCompositeElementBas
     myContainer.setChild(MODULE_REFERENCE_CHILD_ROLE, moduleReference);
   }
 
-  private JpsGwtCompilerOutputPackagingElement(JpsGwtCompilerOutputPackagingElement original) {
-    super(original);
-    myOutputKind = original.myOutputKind;
-  }
-
-  @Override
-  public @NotNull JpsGwtCompilerOutputPackagingElement createCopy() {
-    return new JpsGwtCompilerOutputPackagingElement(this);
-  }
-
   @Override
   public @NotNull JpsGwtCompilerOutputPackagingElement createElementCopy() {
-    return new JpsGwtCompilerOutputPackagingElement(this);
+    JpsModuleReference moduleReference = getModuleReference();
+    return new JpsGwtCompilerOutputPackagingElement(
+      JpsElementFactory.getInstance().createModuleReference(moduleReference.getModuleName()),
+      myOutputKind);
   }
 
   public OutputKind getOutputKind() {

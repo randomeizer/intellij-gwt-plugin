@@ -91,9 +91,9 @@ public final class CssResourceClassErrorsInspection extends BaseGwtInspection {
 
           final PsiElement place;
           final ProblemHighlightType type;
-          final PsiLiteral literal = methodElement.getClassNameAttributeElement().getPsiLiteral();
-          if (literal != null) {
-            place = literal;
+          final PsiElement attributeValue = methodElement.getClassNameAttributeElement().getPsiElement();
+          if (attributeValue instanceof PsiLiteral) {
+            place = attributeValue;
             type = ProblemHighlightType.LIKE_UNKNOWN_SYMBOL;
           }
           else {
