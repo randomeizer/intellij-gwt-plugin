@@ -2,7 +2,6 @@ package org.randombits.intellij.gwt.run.remoteUi;
 
 import org.randombits.intellij.gwt.shell.remoteUi.generated.RemoteMessageProto;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.util.io.socketConnection.AbstractRequest;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -14,7 +13,7 @@ import static org.randombits.intellij.gwt.shell.remoteUi.generated.RemoteMessage
 import static org.randombits.intellij.gwt.shell.remoteUi.generated.RemoteMessageProto.Message.Request.ViewerRequest.RequestType.DISCONNECT_LOG;
 import static org.randombits.intellij.gwt.shell.remoteUi.generated.RemoteMessageProto.Message.Request.ViewerRequest.RequestType.INITIALIZE;
 
-public final class RemoteUiRequest implements AbstractRequest {
+public final class RemoteUiRequest {
   private static final Logger LOG = Logger.getInstance(RemoteUiRequest.class);
   private final RemoteMessageProto.Message.Builder myBuilder;
   private final int myMessageId;
@@ -38,7 +37,6 @@ public final class RemoteUiRequest implements AbstractRequest {
     message.writeDelimitedTo(stream);
   }
 
-  @Override
   public int getId() {
     return myMessageId;
   }

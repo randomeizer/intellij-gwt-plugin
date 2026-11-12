@@ -3,29 +3,19 @@ package org.randombits.intellij.gwt.run.remoteUi;
 import org.randombits.intellij.gwt.run.GwtRunConfiguration;
 import org.randombits.intellij.gwt.run.remoteUi.responses.CapabilityExchangeResponse;
 import org.randombits.intellij.gwt.run.remoteUi.responses.InitializeResponse;
-import org.randombits.intellij.gwt.run.remoteUi.responses.RemoteUiResponse;
-import org.randombits.intellij.gwt.run.remoteUi.responses.RemoteUiResponseReader;
 import org.randombits.intellij.gwt.sdk.GwtVersion;
 import com.intellij.ide.browsers.JavaScriptDebuggerStarter;
 import com.intellij.ide.browsers.WebBrowser;
-import com.intellij.util.io.socketConnection.AbstractResponseHandler;
-import com.intellij.util.io.socketConnection.RequestResponseExternalizerFactory;
-import com.intellij.util.io.socketConnection.RequestWriter;
-import com.intellij.util.io.socketConnection.ResponseReader;
-import com.intellij.util.io.socketConnection.SocketConnection;
-import com.intellij.util.io.socketConnection.SocketConnectionFactory;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.SwingUtilities;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class RemoteUiConnection {
-  private final SocketConnection<RemoteUiRequest, RemoteUiResponse> myConnection;
+  private final RemoteUiTransport myConnection;
   private final GwtRunConfiguration myConfiguration;
   private final GwtVersion mySdkVersion;
   private final boolean myOpenInBrowser;
@@ -40,24 +30,17 @@ public class RemoteUiConnection {
     myOpenInBrowser = openInBrowser;
     myStartJavaScriptDebugger = startJavaScriptDebugger;
     myBrowser = browser;
-    myConnection = SocketConnectionFactory.createServerConnection(7901, null,20, new RemoteUiRequestExternalizer());
-    myConnection.registerHandler(CapabilityExchangeResponse.class, new AbstractResponseHandler<>() {
-      @Override
-      public void processResponse(@NotNull CapabilityExchangeResponse response) {
-        myConnection.sendRequest(RemoteUiRequest.createCapabilitiesResponse(response.getMessageId()));
+    myConnection = new RemoteUiTransport(7901, 20);
+    myConnection.registerHandler(CapabilityExchangeResponse.class, response ->
+      myConnection.sendRequest(RemoteUiRequest.createCapabilitiesResponse(response.getMessageId())));
+    myConnection.registerHandler(InitializeResponse.class, response -> {
+      final List<String> urls = response.getStartupUrlsList();
+      if (!urls.isEmpty()) {
+        final String url = urls.get(0);
+        //noinspection SSBasedInspection
+        SwingUtilities.invokeLater(() -> onInitialized(url));
       }
-    });
-    myConnection.registerHandler(InitializeResponse.class, new AbstractResponseHandler<>() {
-      @Override
-      public void processResponse(@NotNull InitializeResponse response) {
-        final List<String> urls = response.getStartupUrlsList();
-        if (!urls.isEmpty()) {
-          final String url = urls.get(0);
-          //noinspection SSBasedInspection
-          SwingUtilities.invokeLater(() -> onInitialized(url));
-        }
-        myConnection.sendRequest(RemoteUiRequest.createDummyResponseRequest(response.getMessageId()));
-      }
+      myConnection.sendRequest(RemoteUiRequest.createDummyResponseRequest(response.getMessageId()));
     });
   }
 
@@ -85,7 +68,7 @@ public class RemoteUiConnection {
     return myConnection.getPort();
   }
 
-  public SocketConnection<RemoteUiRequest, RemoteUiResponse> getConnection() {
+  public RemoteUiTransport getConnection() {
     return myConnection;
   }
 
@@ -93,20 +76,4 @@ public class RemoteUiConnection {
     myConnection.close();
   }
 
-  private static class RemoteUiRequestExternalizer extends RequestResponseExternalizerFactory<RemoteUiRequest, RemoteUiResponse> {
-    @Override
-    public @NotNull RequestWriter<RemoteUiRequest> createRequestWriter(final @NotNull OutputStream output) throws IOException {
-      return new RequestWriter<>() {
-        @Override
-        public void writeRequest(RemoteUiRequest request) throws IOException {
-          request.sendMessage(output);
-        }
-      };
-    }
-
-    @Override
-    public @NotNull ResponseReader<RemoteUiResponse> createResponseReader(@NotNull InputStream input) throws IOException {
-      return new RemoteUiResponseReader(input);
-    }
-  }
 }

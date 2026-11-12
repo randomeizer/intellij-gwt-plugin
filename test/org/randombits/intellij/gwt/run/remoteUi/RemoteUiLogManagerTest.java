@@ -172,6 +172,36 @@ public class RemoteUiLogManagerTest extends LightJavaCodeInsightFixtureTestCase 
     assertEquals(0, myModules.getItemCount());
   }
 
+  public void testInitializationCapabilitiesAndRemoteFailureReachMainConsole() throws Exception {
+    exchange(ViewerRequest.newBuilder().setRequestType(ViewerRequest.RequestType.INITIALIZE)
+      .setInitialize(ViewerRequest.Initialize.newBuilder().addStartupURLs("http://localhost:8888/App.html")));
+    var response = exchange(ViewerRequest.newBuilder().setRequestType(ViewerRequest.RequestType.CAPABILITY_EXCHANGE)
+      .setCapabilityExchange(ViewerRequest.CapabilityExchange.newBuilder()));
+    assertEquals(Set.of(ViewerRequest.RequestType.values()), response.getResponse().getViewerResponse()
+      .getCapabilityExchange().getCapabilitiesList().stream().map(capability -> capability.getCapability())
+      .collect(java.util.stream.Collectors.toSet()));
+    onClient(() -> {
+      Message.newBuilder().setMessageType(Message.MessageType.FAILURE).setMessageId(1000)
+        .setFailure(Message.Failure.newBuilder().setMessage("Remote SDK failure").setStackTrace("remote trace"))
+        .build().writeDelimitedTo(myClient.getOutputStream());
+      myClient.getOutputStream().flush();
+      return null;
+    });
+    var console = (ConsoleViewImpl)myView.getMainConsole();
+    awaitText(console, "http://localhost:8888/App.html");
+    awaitText(console, "Remote SDK failure");
+    assertOutputType(console, "Remote SDK failure", ConsoleViewContentType.ERROR_OUTPUT);
+  }
+
+  public void testPeerDisconnectLetsFinalQueuedLogReachConsole() throws Exception {
+    int module = addModule("example.App");
+    var console = awaitModuleConsole("example.App", 1);
+    addEntry(module, "INFO", "Last message before EOF", "");
+    myClient.close();
+    awaitText(console, "INFO: Last message before EOF\n");
+    assertTrue(myConnection.getConnection().awaitTermination(5, TimeUnit.SECONDS));
+  }
+
   private int addModule(String name) throws Exception {
     var module = ViewerRequest.AddLog.ModuleLog.newBuilder().setName(name)
       .setUrl("http://localhost/App.html?gwt.codesvr=127.0.0.1:9997")

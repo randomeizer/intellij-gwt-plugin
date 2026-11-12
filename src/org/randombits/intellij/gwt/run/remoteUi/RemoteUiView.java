@@ -9,7 +9,6 @@ import com.intellij.execution.ui.layout.PlaceInGrid;
 import org.randombits.intellij.gwt.GwtBundle;
 import org.randombits.intellij.gwt.run.remoteUi.responses.FailureResponse;
 import org.randombits.intellij.gwt.run.remoteUi.responses.InitializeResponse;
-import org.randombits.intellij.gwt.run.remoteUi.responses.RemoteUiResponse;
 import com.intellij.icons.AllIcons;
 import com.intellij.ide.browsers.OpenUrlHyperlinkInfo;
 import com.intellij.ide.browsers.WebBrowser;
@@ -18,8 +17,6 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Condition;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.ui.content.Content;
-import com.intellij.util.io.socketConnection.AbstractResponseHandler;
-import com.intellij.util.io.socketConnection.SocketConnection;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -39,26 +36,19 @@ public final class RemoteUiView extends ConsoleViewWrapper {
     Disposer.register(this, myServerConsole);
     myModuleLogComponent = new ModuleLogComponent(project);
     Disposer.register(this, myModuleLogComponent);
-    final SocketConnection<RemoteUiRequest,RemoteUiResponse> connection = uiConnection.getConnection();
+    final RemoteUiTransport connection = uiConnection.getConnection();
     new RemoteUiLogManager(project, connection, this).registerHandlers();
-    connection.registerHandler(FailureResponse.class, new AbstractResponseHandler<>() {
-      @Override
-      public void processResponse(@NotNull FailureResponse response) {
-        delegate.print(response.getMessage(), ConsoleViewContentType.ERROR_OUTPUT);
-      }
-    });
-    connection.registerHandler(InitializeResponse.class, new AbstractResponseHandler<>() {
-      @Override
-      public void processResponse(@NotNull InitializeResponse response) {
-        final List<String> urls = response.getStartupUrlsList();
-        String message = GwtBundle.message("console.message.dev.mode.initialized.startup.urls", urls.size());
-        delegate.print(message + "\n", ConsoleViewContentType.SYSTEM_OUTPUT);
-        final Condition<WebBrowser> suitableBrowsers =
-          browser -> myUiConnection.getSdkVersion().isBrowserSupportedInDevMode(browser);
-        for (String url : urls) {
-          delegate.printHyperlink(url, new OpenUrlHyperlinkInfo(url, suitableBrowsers));
-          delegate.print("\n", ConsoleViewContentType.SYSTEM_OUTPUT);
-        }
+    connection.registerHandler(FailureResponse.class, response ->
+      delegate.print(response.getMessage(), ConsoleViewContentType.ERROR_OUTPUT));
+    connection.registerHandler(InitializeResponse.class, response -> {
+      final List<String> urls = response.getStartupUrlsList();
+      String message = GwtBundle.message("console.message.dev.mode.initialized.startup.urls", urls.size());
+      delegate.print(message + "\n", ConsoleViewContentType.SYSTEM_OUTPUT);
+      final Condition<WebBrowser> suitableBrowsers =
+        browser -> myUiConnection.getSdkVersion().isBrowserSupportedInDevMode(browser);
+      for (String url : urls) {
+        delegate.printHyperlink(url, new OpenUrlHyperlinkInfo(url, suitableBrowsers));
+        delegate.print("\n", ConsoleViewContentType.SYSTEM_OUTPUT);
       }
     });
   }
