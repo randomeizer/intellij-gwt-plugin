@@ -3,14 +3,13 @@ package org.randombits.intellij.gwt.run.remoteUi.responses;
 import org.randombits.intellij.gwt.run.remoteUi.UnknownRemoteUiResponse;
 import org.randombits.intellij.gwt.shell.remoteUi.generated.RemoteMessageProto;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.util.io.socketConnection.ResponseReader;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.InputStream;
 
-public class RemoteUiResponseReader implements ResponseReader<RemoteUiResponse> {
+public class RemoteUiResponseReader {
   private static final Logger LOG = Logger.getInstance(RemoteUiResponseReader.class);
   private final InputStream myInput;
 
@@ -18,7 +17,6 @@ public class RemoteUiResponseReader implements ResponseReader<RemoteUiResponse> 
     myInput = input;
   }
 
-  @Override
   public RemoteUiResponse readResponse() throws IOException, InterruptedException {
     final RemoteMessageProto.Message message = RemoteMessageProto.Message.parseDelimitedFrom(myInput);
     if (message == null) {

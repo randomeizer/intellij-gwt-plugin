@@ -9,15 +9,12 @@ import org.randombits.intellij.gwt.run.remoteUi.responses.AddMainLogResponse;
 import org.randombits.intellij.gwt.run.remoteUi.responses.AddModuleLogResponse;
 import org.randombits.intellij.gwt.run.remoteUi.responses.AddWebServerLogResponse;
 import org.randombits.intellij.gwt.run.remoteUi.responses.DisconnectLogResponse;
-import org.randombits.intellij.gwt.run.remoteUi.responses.RemoteUiResponse;
 import org.randombits.intellij.gwt.shell.remoteUi.generated.RemoteMessageProto;
 import com.intellij.openapi.application.CoroutinesKt;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.util.io.socketConnection.AbstractResponseHandler;
-import com.intellij.util.io.socketConnection.SocketConnection;
 import com.intellij.util.ui.update.DebouncedUpdates;
 import com.intellij.util.ui.update.UpdateQueue;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -29,17 +26,18 @@ import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 public final class RemoteUiLogManager {
   private static final Logger LOG = Logger.getInstance(RemoteUiLogManager.class);
   private int myNextLogHandle;
   private final Object myLock = new Object();
   private final Int2ObjectMap<LogBranchDescriptor> myLogDescriptors = new Int2ObjectOpenHashMap<>();
-  private final SocketConnection<RemoteUiRequest, RemoteUiResponse> myConnection;
+  private final RemoteUiTransport myConnection;
   private final RemoteUiView myView;
   private final UpdateQueue<LogMessage> myLogUpdateQueue;
 
-  public RemoteUiLogManager(Project project, SocketConnection<RemoteUiRequest, RemoteUiResponse> connection, RemoteUiView view) {
+  public RemoteUiLogManager(Project project, RemoteUiTransport connection, RemoteUiView view) {
     myConnection = connection;
     myView = view;
     
@@ -56,28 +54,19 @@ public final class RemoteUiLogManager {
     myConnection.registerHandler(AddMainLogResponse.class, new AddLogResponseHandler<>());
     myConnection.registerHandler(AddWebServerLogResponse.class, new AddLogResponseHandler<>());
     myConnection.registerHandler(AddModuleLogResponse.class, new AddModuleLogResponseHandler());
-    myConnection.registerHandler(AddLogBranchResponse.class, new AbstractResponseHandler<>() {
-      @Override
-      public void processResponse(@NotNull AddLogBranchResponse response) {
-        final RemoteMessageProto.Message.Request.ViewerRequest.AddLogBranch addLogBranch = response.getAddLogBranch();
-        addLogEntry(addLogBranch.getParentLogHandle(), addLogBranch.getLogData());
-        int handle = createNewLogBranch(addLogBranch.getParentLogHandle());
-        myConnection.sendRequest(RemoteUiRequest.createAddLogBranchResponse(handle, response.getMessageId()));
-      }
+    myConnection.registerHandler(AddLogBranchResponse.class, response -> {
+      final RemoteMessageProto.Message.Request.ViewerRequest.AddLogBranch addLogBranch = response.getAddLogBranch();
+      addLogEntry(addLogBranch.getParentLogHandle(), addLogBranch.getLogData());
+      int handle = createNewLogBranch(addLogBranch.getParentLogHandle());
+      myConnection.sendRequest(RemoteUiRequest.createAddLogBranchResponse(handle, response.getMessageId()));
     });
-    myConnection.registerHandler(AddLogEntryResponse.class, new AbstractResponseHandler<>() {
-      @Override
-      public void processResponse(@NotNull AddLogEntryResponse response) {
-        addLogEntry(response.getAddLogEntry().getLogHandle(), response.getAddLogEntry().getLogData());
-        myConnection.sendRequest(RemoteUiRequest.createDummyResponseRequest(response.getMessageId()));
-      }
+    myConnection.registerHandler(AddLogEntryResponse.class, response -> {
+      addLogEntry(response.getAddLogEntry().getLogHandle(), response.getAddLogEntry().getLogData());
+      myConnection.sendRequest(RemoteUiRequest.createDummyResponseRequest(response.getMessageId()));
     });
-    myConnection.registerHandler(DisconnectLogResponse.class, new AbstractResponseHandler<>() {
-      @Override
-      public void processResponse(@NotNull DisconnectLogResponse response) {
-        removeLog(response.getLogHandle());
-        myConnection.sendRequest(RemoteUiRequest.createDummyResponseRequest(response.getMessageId()));
-      }
+    myConnection.registerHandler(DisconnectLogResponse.class, response -> {
+      removeLog(response.getLogHandle());
+      myConnection.sendRequest(RemoteUiRequest.createDummyResponseRequest(response.getMessageId()));
     });
   }
 
@@ -157,9 +146,9 @@ public final class RemoteUiLogManager {
     }
   }
 
-  private class AddLogResponseHandler<T extends AddLogResponseBase> implements AbstractResponseHandler<T> {
+  private class AddLogResponseHandler<T extends AddLogResponseBase> implements Consumer<T> {
     @Override
-    public void processResponse(@NotNull T response) {
+    public void accept(@NotNull T response) {
       doProcess(response);
     }
 
@@ -172,7 +161,7 @@ public final class RemoteUiLogManager {
 
   private class AddModuleLogResponseHandler extends AddLogResponseHandler<AddModuleLogResponse> {
     @Override
-    public void processResponse(@NotNull AddModuleLogResponse response) {
+    public void accept(@NotNull AddModuleLogResponse response) {
       final int handle = doProcess(response);
       final RemoteMessageProto.Message.Request.ViewerRequest.AddLog.ModuleLog moduleLog = response.getModuleLog();
       addLogEntry(handle, "Loading module: " + moduleLog.getName(), false);
