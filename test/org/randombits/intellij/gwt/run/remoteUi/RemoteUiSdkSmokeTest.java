@@ -6,6 +6,8 @@ import com.intellij.openapi.util.Disposer;
 import com.intellij.testFramework.PlatformTestUtil;
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
 import org.junit.Assume;
+import org.junit.runner.RunWith;
+import com.intellij.testFramework.JUnit38AssumeSupportRunner;
 import org.randombits.intellij.gwt.run.GwtRunConfiguration;
 import org.randombits.intellij.gwt.run.GwtRunConfigurationType;
 import org.randombits.intellij.gwt.sdk.impl.GwtVersionImpl;
@@ -16,6 +18,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 
+@RunWith(JUnit38AssumeSupportRunner.class)
 public class RemoteUiSdkSmokeTest extends LightJavaCodeInsightFixtureTestCase {
   public void testRealSdkHandshakeLogsSessionsRestartAndShutdown() throws Exception {
     String jars = System.getenv("GWT_REMOTE_UI_SMOKE_JARS");

@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
@@ -104,7 +105,7 @@ public class RemoteUiTransportTest extends LightPlatformTestCase {
     try (var client = connect()) {
       port = myTransport.getPort();
       client.shutdownOutput();
-      assertEquals(-1, client.getInputStream().read());
+      assertPeerDisconnected(client);
     }
     assertTrue(myTransport.awaitTermination(5, TimeUnit.SECONDS));
     assertFalse("EOF must let queued console updates drain until owner disposal", childDisposed.get());
@@ -139,7 +140,7 @@ public class RemoteUiTransportTest extends LightPlatformTestCase {
       myTransport.close();
       myTransport.close();
       assertTrue(myTransport.awaitTermination(5, TimeUnit.SECONDS));
-      assertEquals(-1, client.getInputStream().read());
+      assertPeerDisconnected(client);
       myTransport.sendRequest(RemoteUiRequest.createDummyResponseRequest(1));
     }
   }
@@ -182,7 +183,7 @@ public class RemoteUiTransportTest extends LightPlatformTestCase {
       client.getOutputStream().write(bytes);
       client.getOutputStream().flush();
       client.shutdownOutput();
-      assertEquals(-1, client.getInputStream().read());
+      assertPeerDisconnected(client);
       assertTrue(myTransport.awaitTermination(5, TimeUnit.SECONDS));
     }
   }
@@ -192,6 +193,16 @@ public class RemoteUiTransportTest extends LightPlatformTestCase {
     var client = new Socket(InetAddress.getLoopbackAddress(), myTransport.getPort());
     client.setSoTimeout(5000);
     return client;
+  }
+
+  private static void assertPeerDisconnected(Socket client) throws IOException {
+    try {
+      assertEquals(-1, client.getInputStream().read());
+    }
+    catch (SocketException expected) {
+      // Closing a socket with a partial/unread frame can send TCP RST rather than FIN, notably on Linux.
+      // A read timeout is not a SocketException and still fails this test.
+    }
   }
 
   private static Message initialize(int id, String url) {
