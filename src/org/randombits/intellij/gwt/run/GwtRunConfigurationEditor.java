@@ -32,7 +32,6 @@ import org.randombits.intellij.gwt.sdk.GwtVersion;
 import org.randombits.intellij.gwt.web.GwtWebUtil;
 import com.intellij.ide.DataManager;
 import com.intellij.ide.browsers.BrowserSelector;
-import com.intellij.ide.browsers.JavaScriptDebuggerStarter;
 import com.intellij.ide.browsers.WebBrowserManager;
 import com.intellij.ide.highlighter.HtmlFileType;
 import com.intellij.javaee.constants.JavaeeCommonConstants;
@@ -410,7 +409,7 @@ public final class GwtRunConfigurationEditor extends SettingsEditor<GwtRunConfig
   private void updateStartPagePanel() {
     myStartPageLabel.setVisible(true);
     myHtmlPageBox.setVisible(true);
-    myStartJavaScriptDebuggerCheckBox.setVisible(myUseSuperDevModeCheckBox.isSelected() && JavaScriptDebuggerStarter.Util.hasStarters());
+    myStartJavaScriptDebuggerCheckBox.setVisible(myUseSuperDevModeCheckBox.isSelected() && GwtJavaScriptDebugSupport.isAvailable(myProject));
   }
 
   private void updateGwtModulesCombobox(@Nullable Module module) {

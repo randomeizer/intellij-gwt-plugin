@@ -4,7 +4,7 @@ import org.randombits.intellij.gwt.run.GwtRunConfiguration;
 import org.randombits.intellij.gwt.run.remoteUi.responses.CapabilityExchangeResponse;
 import org.randombits.intellij.gwt.run.remoteUi.responses.InitializeResponse;
 import org.randombits.intellij.gwt.sdk.GwtVersion;
-import com.intellij.ide.browsers.JavaScriptDebuggerStarter;
+import org.randombits.intellij.gwt.run.GwtJavaScriptDebugSupport;
 import com.intellij.ide.browsers.WebBrowser;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -58,7 +58,7 @@ public class RemoteUiConnection {
 
   public void openBrowserOnce(@NotNull String url) {
     if (myOpenInBrowser && myBrowser != null && myBrowserOpened.compareAndSet(false, true)) {
-      JavaScriptDebuggerStarter.Util.startDebugOrLaunchBrowser(myConfiguration, url, myBrowser.getId().toString(),
+      GwtJavaScriptDebugSupport.openBrowser(myConfiguration, url, myBrowser,
                                                                myStartJavaScriptDebugger);
     }
   }

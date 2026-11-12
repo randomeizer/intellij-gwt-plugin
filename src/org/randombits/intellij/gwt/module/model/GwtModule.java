@@ -81,6 +81,8 @@ public interface GwtModule extends DomElement {
 
   boolean isSourceFile(@NotNull VirtualFile file);
 
+  boolean isSuperSourceFile(@NotNull VirtualFile file);
+
   Map<VirtualFile, GwtRelativePath> getSourceRoots();
 
   Map<VirtualFile, GwtRelativePath> getSuperSourceRoots();

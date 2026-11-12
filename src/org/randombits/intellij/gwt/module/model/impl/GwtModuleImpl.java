@@ -231,6 +231,11 @@ public abstract class GwtModuleImpl implements GwtModule {
   }
 
   @Override
+  public boolean isSuperSourceFile(@NotNull VirtualFile file) {
+    return isIncluded(file, getSuperSourceRoots());
+  }
+
+  @Override
   public Map<VirtualFile, GwtRelativePath> getSourceRoots() {
     return unmodifiableMap(getRootsByRelativePaths(getSources(), GwtModuleXmlConstants.DEFAULT_SOURCE_PATH, true));
   }
