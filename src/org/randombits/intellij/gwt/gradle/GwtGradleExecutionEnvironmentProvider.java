@@ -15,12 +15,12 @@ import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil;
 import com.intellij.openapi.externalSystem.util.ExternalSystemUtil;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
+import com.intellij.pom.java.LanguageLevel;
 import com.intellij.task.ExecuteRunConfigurationTask;
 import com.intellij.util.execution.ParametersListUtil;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.jps.model.java.JpsJavaSdkType;
 import org.jetbrains.plugins.gradle.execution.build.CachedModuleDataFinder;
 import org.jetbrains.plugins.gradle.execution.build.GradleExecutionEnvironmentProvider;
 import org.jetbrains.plugins.gradle.util.GradleModuleData;
@@ -117,7 +117,7 @@ public final class GwtGradleExecutionEnvironmentProvider implements GradleExecut
     gwtParameters.put("minHeapSize", null);
 
     gwtCompilerParameters.put("style", escapeString(gwtFacetConfiguration.getOutputStyle().getId()));
-    gwtParameters.put("sourceLevel", escapeString(JpsJavaSdkType.complianceOption(gwtFacetConfiguration.getClientLanguageLevel().toJavaVersion())));
+    gwtParameters.put("sourceLevel", escapeString(sourceLevelOption(gwtFacetConfiguration.getClientLanguageLevel())));
 
     String gwtRunConfigurationProgramParameters = gwtRunConfiguration.getProgramParameters();
     if (gwtRunConfigurationProgramParameters != null) {
@@ -206,6 +206,11 @@ public final class GwtGradleExecutionEnvironmentProvider implements GradleExecut
     runnerSettings.putUserData(INIT_SCRIPT_KEY, initScript);
 
     return environment;
+  }
+
+  static @NotNull String sourceLevelOption(@NotNull LanguageLevel languageLevel) {
+    int feature = languageLevel.toJavaVersion().feature;
+    return feature < 5 ? "1." + feature : Integer.toString(feature);
   }
 
   private static @NotNull String mapToString(Map<String, String> gwtCompilerParameters) {
