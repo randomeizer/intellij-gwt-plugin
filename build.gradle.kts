@@ -1,6 +1,7 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 import org.jetbrains.intellij.platform.gradle.tasks.PrepareSandboxTask
+import org.jetbrains.intellij.platform.gradle.tasks.VerifyPluginTask
 
 fun properties(key: String) = project.findProperty(key).toString()
 
@@ -31,6 +32,8 @@ dependencies {
         intellijIdea(properties("platformVersion"))
 
         // hard dependencies (see resources/META-INF/plugin.xml <dependencies>)
+        bundledPlugin("com.intellij.java")
+        bundledPlugin("com.intellij.xml")
         bundledPlugin("JavaScript")
         bundledPlugin("com.intellij.css")
         bundledPlugin("com.intellij.java-i18n")
@@ -63,6 +66,9 @@ dependencies {
         testFramework(TestFrameworkType.Plugin.Maven)
         testFramework(TestFrameworkType.Plugin.ExternalSystem)
         testFramework(TestFrameworkType.JUnit5)
+
+        pluginVerifier()
+        zipSigner()
     }
 
     // protobuf-lite runtime for the generated RemoteMessageProto sources
@@ -112,10 +118,35 @@ intellijPlatform {
     pluginConfiguration {
         ideaVersion {
             sinceBuild = properties("pluginSinceBuild")
+            // Claim only the platform line we build and verify against.
+            untilBuild = "${properties("pluginSinceBuild").substringBefore('.')}.*"
         }
 
         changeNotes = providers.fileContents(changeNotesFile).asText.get()
     }
+
+    pluginVerification {
+        ides {
+            current()
+        }
+        failureLevel = listOf(
+            VerifyPluginTask.FailureLevel.COMPATIBILITY_PROBLEMS,
+            VerifyPluginTask.FailureLevel.INTERNAL_API_USAGES,
+            VerifyPluginTask.FailureLevel.OVERRIDE_ONLY_API_USAGES,
+            VerifyPluginTask.FailureLevel.MISSING_DEPENDENCIES,
+            VerifyPluginTask.FailureLevel.INVALID_PLUGIN,
+        )
+    }
+}
+
+val prepareMarketplaceRelease by tasks.registering {
+    group = "distribution"
+    description = "Tests, packages, and verifies the plugin for manual Marketplace submission."
+    dependsOn("check", "buildPlugin", "verifyPluginStructure", "verifyPlugin")
+}
+
+tasks.named("publishPlugin") {
+    dependsOn(prepareMarketplaceRelease)
 }
 
 tasks.register("verifyReleaseTag") {
@@ -194,8 +225,14 @@ tasks {
         dependsOn("testFreeEdition")
     }
 
-    // bundle the legacy SuperDevMode launcher jar into the plugin's lib/ directory
+    // Include distribution licenses and the legacy SuperDevMode launcher.
     withType<PrepareSandboxTask> {
+        from(listOf(
+            layout.projectDirectory.file("LICENSE.txt"),
+            layout.projectDirectory.file("THIRD_PARTY_NOTICES.txt"),
+        )) {
+            into(pluginName)
+        }
         from(layout.projectDirectory.dir("lib")) {
             into(pluginName.map { "$it/lib/" })
             include("*.jar")

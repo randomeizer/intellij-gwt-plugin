@@ -1,13 +1,15 @@
 <!-- Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.-->
-<idea-plugin>
+<idea-plugin url="https://github.com/randomeizer/intellij-gwt-plugin">
   <name>Randombits GWT Support</name>
-  <id>org.randombits.intellij.gwt</id>
+  <id>org.randombits.gwtplugin</id>
   <description>
     <![CDATA[
       <p>Simplifies development of web applications based on
       <a href="https://www.gwtproject.org/overview.html">Google Web Toolkit</a>.
       Supports free mode and Ultimate in unified IntelliJ IDEA 2026.3 (build 263).
       Older standalone Community Edition versions are outside the supported build range.</p>
+      <p>Independently maintained by Randombits. This is a separate plugin from JetBrains' GWT
+      plugin and is not an official JetBrains support channel.</p>
       <p><b>Available without an Ultimate subscription:</b></p>
       <ul>
         <li>GWT facets and module XML, SDK management, compiler integration, and plain compiler-output artifact import, validation, and setup quick fixes.</li>
@@ -27,6 +29,8 @@
   <resource-bundle>messages.GwtBundle</resource-bundle>
 
   <dependencies>
+    <plugin id="com.intellij.java"/>
+    <plugin id="com.intellij.xml"/>
     <plugin id="JavaScript"/>
     <!-- region Generated dependencies - run `Generate Product Layouts` to regenerate -->
     <plugin id="com.intellij.css"/>
@@ -73,14 +77,15 @@
   <depends optional="true" config-file="gwt-maven-support.xml">org.jetbrains.idea.maven</depends>
   <depends optional="true" config-file="gradle-support.xml">org.jetbrains.plugins.gradle</depends>
   <depends optional="true" config-file="gwt-web-support.xml">com.intellij.javaee.web</depends>
-  <vendor>Randombits</vendor>
+  <vendor email="info@randombits.org" url="https://github.com/randomeizer/intellij-gwt-plugin">Randombits</vendor>
   <category>JVM Frameworks</category>
 
   <extensionPoints>
-    <extensionPoint name="devModeServerProvider" interface="org.randombits.intellij.gwt.run.GwtDevModeServerProvider" dynamic="true"/>
-    <extensionPoint name="sdkType" interface="org.randombits.intellij.gwt.sdk.GwtSdkType" dynamic="true"/>
-    <extensionPoint name="unregisteredServletFilter" interface="com.intellij.openapi.util.Condition" dynamic="true"/>
-    <extensionPoint name="compileOutputRelativePathSuggester" interface="org.randombits.intellij.gwt.packaging.GwtCompileOutputRelativePathSuggester" dynamic="true"/>
+    <!-- Preserve extension-point names across the Marketplace plugin ID migration. -->
+    <extensionPoint qualifiedName="org.randombits.intellij.gwt.devModeServerProvider" interface="org.randombits.intellij.gwt.run.GwtDevModeServerProvider" dynamic="true"/>
+    <extensionPoint qualifiedName="org.randombits.intellij.gwt.sdkType" interface="org.randombits.intellij.gwt.sdk.GwtSdkType" dynamic="true"/>
+    <extensionPoint qualifiedName="org.randombits.intellij.gwt.unregisteredServletFilter" interface="com.intellij.openapi.util.Condition" dynamic="true"/>
+    <extensionPoint qualifiedName="org.randombits.intellij.gwt.compileOutputRelativePathSuggester" interface="org.randombits.intellij.gwt.packaging.GwtCompileOutputRelativePathSuggester" dynamic="true"/>
   </extensionPoints>
 
   <extensions defaultExtensionNs="com.intellij">

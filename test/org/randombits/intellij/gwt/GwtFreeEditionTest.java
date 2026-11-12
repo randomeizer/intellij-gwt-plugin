@@ -16,7 +16,7 @@ import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
 public class GwtFreeEditionTest extends LightJavaCodeInsightFixtureTestCase {
   public void testCoreLoadsWithoutUltimate() {
     assertTrue(PluginManagerCore.getLoadedPlugins().stream()
-                 .anyMatch(plugin -> plugin.getPluginId().equals(PluginId.getId("org.randombits.intellij.gwt"))));
+                 .anyMatch(plugin -> plugin.getPluginId().equals(PluginId.getId("org.randombits.gwtplugin"))));
     for (String id : new String[]{"com.intellij.modules.ultimate", "com.intellij.modules.idea.ultimate",
       "com.intellij.javaee.web", "com.intellij.javaee.app.servers.integration", "JavaScriptDebugger"}) {
       assertFalse(id, PluginManagerCore.getLoadedPlugins().stream()

@@ -38,7 +38,7 @@ public class GwtOptionalIntegrationTest extends LightJavaCodeInsightFixtureTestC
   }
 
   public void testOptionalClassesAreVisibleToPluginClassLoader() throws Exception {
-    var plugin = PluginManagerCore.getPlugin(PluginId.getId("org.randombits.intellij.gwt"));
+    var plugin = PluginManagerCore.getPlugin(PluginId.getId("org.randombits.gwtplugin"));
     assertNotNull(plugin);
     ClassLoader loader = plugin.getPluginClassLoader();
     assertNotNull(Class.forName("com.intellij.javaee.ui.packaging.ExplodedWarArtifactType", true, loader));
