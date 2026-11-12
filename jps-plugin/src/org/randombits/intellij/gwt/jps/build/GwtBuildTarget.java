@@ -8,7 +8,6 @@ import org.jetbrains.jps.builders.BuildRootIndex;
 import org.jetbrains.jps.builders.BuildTarget;
 import org.jetbrains.jps.builders.BuildTargetRegistry;
 import org.jetbrains.jps.builders.TargetOutputIndex;
-import org.jetbrains.jps.builders.impl.BuildRootDescriptorImpl;
 import org.jetbrains.jps.builders.storage.BuildDataPaths;
 import org.randombits.intellij.gwt.jps.model.JpsGwtExtensionService;
 import org.randombits.intellij.gwt.jps.model.JpsGwtModuleExtension;
@@ -56,7 +55,7 @@ public class GwtBuildTarget extends BuildTarget<BuildRootDescriptor> {
     processGwtExtensionFromDependencies(extension -> {
       for (JpsModuleSourceRoot sourceRoot : extension.getModule().getSourceRoots(JavaSourceRootType.SOURCE)) {
         final File root = JpsPathUtil.urlToFile(sourceRoot.getUrl());
-        roots.add(new BuildRootDescriptorImpl(this, root, true));
+        roots.add(new GwtBuildRootDescriptor(this, root));
       }
     });
     return roots;

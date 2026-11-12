@@ -21,7 +21,7 @@ public class JpsGwtCompilerOutputPackagingElement extends JpsCompositeElementBas
   }
 
   @Override
-  public @NotNull JpsGwtCompilerOutputPackagingElement createElementCopy() {
+  public @NotNull JpsGwtCompilerOutputPackagingElement createCopy() {
     JpsModuleReference moduleReference = getModuleReference();
     return new JpsGwtCompilerOutputPackagingElement(
       JpsElementFactory.getInstance().createModuleReference(moduleReference.getModuleName()),

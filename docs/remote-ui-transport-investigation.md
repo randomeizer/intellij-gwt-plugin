@@ -92,4 +92,4 @@ GWT_REMOTE_UI_SMOKE_JARS=/path/to/gwt-dev-2.12.2.jar:/path/to/gwt-dev-2.13.1.jar
   ./gradlew --offline --no-daemon --max-workers=1 test --rerun-tasks --tests '*RemoteUiSdkSmokeTest'
 ```
 
-The environment value uses the platform path separator (`:` on macOS/Linux, `;` on Windows). Without it, the SDK-dependent test reports a skip; normal loopback and console coverage always runs. The explicit rerun avoids reusing a previous Gradle test result when changing only this optional environment input. Full release-gate results are recorded in [the publishing guide](marketplace-publishing.md).
+The environment value uses the platform path separator (`:` on macOS/Linux, `;` on Windows). Without it, the SDK-dependent test reports a skip; normal loopback and console coverage always runs. Gradle tracks the fixture files and optional SDK environment input; the explicit rerun is available when changing SDK JAR contents in place. Full release-gate results are recorded in [the publishing guide](marketplace-publishing.md).
