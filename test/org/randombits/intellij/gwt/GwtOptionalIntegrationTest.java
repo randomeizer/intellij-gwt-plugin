@@ -42,7 +42,8 @@ public class GwtOptionalIntegrationTest extends LightJavaCodeInsightFixtureTestC
     assertNotNull(plugin);
     ClassLoader loader = plugin.getPluginClassLoader();
     assertNotNull(Class.forName("com.intellij.javaee.ui.packaging.ExplodedWarArtifactType", true, loader));
-    assertNotNull(Class.forName("org.jetbrains.debugger.sourcemap.SourceFileResolver", true, loader));
+    assertNotNull(Class.forName("com.intellij.javascript.debugger.execution.JavaScriptDebugConfiguration", true, loader));
+    assertNotNull(org.randombits.intellij.gwt.run.GwtJavaScriptDebugSupport.getInstance());
   }
 
   public void testRunConfigurationRemainsAvailableWithWebSupport() {

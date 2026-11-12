@@ -215,6 +215,7 @@ tasks {
         inputs.dir(layout.projectDirectory.dir("testData")).withPropertyName("gwtTestData")
         inputs.property("gwtRemoteUiSmokeJars", providers.environmentVariable("GWT_REMOTE_UI_SMOKE_JARS").orElse(""))
         inputs.property("gwtJpsSmokeRepository", providers.environmentVariable("GWT_JPS_SMOKE_REPOSITORY").orElse(""))
+        inputs.property("gwtJsDebugSmokeBrowser", providers.environmentVariable("GWT_JS_DEBUG_SMOKE_BROWSER").orElse(""))
         inputs.property("gwtJpsLegacyPlugin", providers.environmentVariable("GWT_JPS_SMOKE_LEGACY_PLUGIN_JAR").orElse(""))
         classpath += sourceSets["test"].runtimeClasspath
         // Maven's forked server locates telemetry by owning JAR. Prefer the SDK's

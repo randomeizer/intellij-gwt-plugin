@@ -36,6 +36,11 @@ public class GwtFreeEditionTest extends LightJavaCodeInsightFixtureTestCase {
     assertNotNull(GwtSdkType.findType("gradle"));
   }
 
+  public void testJavaScriptDebuggerBridgeIsAbsent() {
+    assertNull(org.randombits.intellij.gwt.run.GwtJavaScriptDebugSupport.getInstance());
+    assertFalse(org.randombits.intellij.gwt.run.GwtJavaScriptDebugSupport.isAvailable(getProject()));
+  }
+
   public void testFacetAndModuleModelWithoutWebServices() {
     GwtFacet facet = GwtTestCase.addGwtFacet(getModule(), null);
     assertNull(org.randombits.intellij.gwt.web.GwtWebSupport.getInstance());

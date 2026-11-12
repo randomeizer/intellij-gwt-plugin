@@ -1,4 +1,8 @@
 <idea-plugin>
+  <extensions defaultExtensionNs="com.intellij">
+    <applicationService serviceInterface="org.randombits.intellij.gwt.run.GwtJavaScriptDebugSupport"
+                        serviceImplementation="org.randombits.intellij.gwt.run.GwtJavaScriptDebugSupportImpl"/>
+  </extensions>
   <extensions defaultExtensionNs="com.jetbrains">
     <javaScriptDebugAware implementation="org.randombits.intellij.gwt.run.JavaToJavaScriptDebugAware"/>
     <fileUrlMapper implementation="org.randombits.intellij.gwt.run.GwtFileUrlMapper"/>
