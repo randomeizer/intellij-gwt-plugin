@@ -80,7 +80,7 @@ public final class JpsGwtModulesCache {
     return result;
   }
 
-  private static List<JpsGwtModule> findGwtModules(JpsModel model) {
+  public static List<JpsGwtModule> findGwtModules(JpsModel model) {
     List<JpsGwtModule> result = new ArrayList<>();
     for (JpsModule module : model.getProject().getModules()) {
       JpsGwtModuleExtension extension = JpsGwtExtensionService.getInstance().getExtension(module);

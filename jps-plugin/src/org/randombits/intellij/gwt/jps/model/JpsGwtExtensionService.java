@@ -18,4 +18,6 @@ public abstract class JpsGwtExtensionService {
   public abstract void setExtension(@NotNull JpsModule module, @NotNull JpsGwtModuleExtension extension);
 
   public abstract @NotNull JpsGwtModuleIndex getGwtModuleIndex(@NotNull JpsModel model, @NotNull BuildDataPaths paths);
+
+  public abstract @NotNull JpsGwtModuleIndex getGwtModuleIndex(@NotNull JpsModel model);
 }

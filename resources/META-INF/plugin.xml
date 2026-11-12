@@ -163,6 +163,7 @@
     <projectService serviceInterface="org.randombits.intellij.gwt.make.GwtCompilerWorkspaceConfiguration"
                     serviceImplementation="org.randombits.intellij.gwt.make.GwtCompilerWorkspaceConfigurationImpl"/>
     <compileServer.plugin classpath="randombits-gwt-jps.jar"/>
+    <directoryIndexExcludePolicy implementation="org.randombits.intellij.gwt.build.GwtCompilerOutputExclusionPolicy"/>
     <compiler.buildTargetScopeProvider implementation="org.randombits.intellij.gwt.build.GwtBuildTargetScopeProvider"/>
     <projectService serviceImplementation="org.randombits.intellij.gwt.make.GwtBuilderMessageHandler"/>
 

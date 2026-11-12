@@ -56,31 +56,48 @@ public class GwtJpsSmoke {
       }
       require(builderFound, "GWT JPS builder service is missing from child classpath");
       Files.createDirectories(work.resolve("src/client"));
-      moduleXml("probe");
-      source("first", false);
+      boolean legacySeed = args.length > 2 && args[2].equals("legacy-seed");
+      if (!Files.exists(work.resolve("src/Probe.gwt.xml"))) moduleXml("probe");
+      if (!Files.exists(work.resolve("src/client/Probe.java"))) source("first", false);
       var storage = new JpsGwtDependenciesStorage(new BuildDataPathsImpl(work.resolve("cache")));
       try (var jars = Files.walk(repository)) {
         var paths = jars.filter(p -> p.toString().endsWith(".jar")).map(Path::toString).toList();
         storage.storeDependenciesPaths("org.gwtproject", "gwt-dev", "2.13.1", paths);
         storage.storeDependenciesPaths("org.gwtproject", "gwt-user", "2.13.1", paths);
       }
-      build(false, Map.of(), false);
+      if (!legacySeed) missingScope();
+      build(false, Map.of(), false, !legacySeed);
       require(Files.isRegularFile(work.resolve("artifact/custom/nested/probe.nocache.js")), "Fresh artifact missed regular output");
       require(!symbolMaps().isEmpty(), "Fresh artifact missed deployment symbol maps");
       System.out.println("FRESH_ARTIFACT_COMPILE_OK");
+      if (legacySeed) {
+        System.out.println("LEGACY_SEED_OK");
+        System.exit(0);
+      }
+      require(Files.isRegularFile(outputRoot(false).resolve("probe/probe.nocache.js")), "Migrated compiler output missing");
 
       var noOp = build(false, Map.of(), false);
       require(noOp.stream().noneMatch(s -> s.contains("Compiling GWT module")), "No-op invoked GWT compiler");
       System.out.println("NO_OP_OK");
+      missingScope();
 
       String before = scripts();
       source("second", false);
+      missingScope();
+      require(before.equals(scripts()), "Missing-scope request copied stale output");
       build(false, Map.of(), false);
       require(!before.equals(scripts()), "Incremental edit did not update artifact JavaScript");
       System.out.println("INCREMENTAL_OK");
 
+      var invalidConfiguration = build(false, Map.of("GWT_COMPILE_REPORT_SOURCE",
+        GwtBuilderParameters.generateCompileReportParameter(moduleName(), "Probe"),
+        "org.randombits.gwt.repositories.v1", "sensitive-invalid-payload"), true);
+      require(invalidConfiguration.stream().anyMatch(s -> s.contains("Invalid or unsupported GWT repository configuration")),
+        "Malformed bridge did not produce a useful error");
+      require(invalidConfiguration.stream().noneMatch(s -> s.contains("sensitive-invalid-payload")), "Bridge payload leaked into diagnostics");
+
       build(false, Map.of("GWT_COMPILE_REPORT_SOURCE",
-        GwtBuilderParameters.generateCompileReportParameter("client", "Probe")), false);
+        GwtBuilderParameters.generateCompileReportParameter(moduleName(), "Probe")), false);
       Path extra = outputRoot(true);
       try (var files = Files.walk(extra)) {
         require(files.anyMatch(p -> p.getFileName().toString().endsWith(".html")), "Real compiler report missing");
@@ -93,6 +110,16 @@ public class GwtJpsSmoke {
       require(!Files.exists(work.resolve("artifact/custom/nested/probe.nocache.js")), "Old renamed artifact output remained");
       System.out.println("RENAME_AND_STALE_REMOVAL_OK");
 
+      Path previous = outputRoot(false);
+      Files.writeString(work.resolve("java-output"), "moved/classes");
+      build(false, Map.of(), false);
+      require(!previous.equals(outputRoot(false)), "Java output relocation did not change GWT output");
+      require(Files.isRegularFile(outputRoot(false).resolve("updated/updated.nocache.js")), "Moved compiler output missing");
+      Files.writeString(work.resolve("module-name"), "renamed-client");
+      build(false, Map.of(), false);
+      require(Files.isRegularFile(work.resolve("artifact/custom/nested/updated.nocache.js")), "Module rename lost output");
+      System.out.println("JAVA_OUTPUT_AND_MODULE_MOVE_OK");
+
       // IDEA's Clean Artifact action deletes its output directory; BuildRunner's CLEAN enum is a no-op.
       require(com.intellij.openapi.util.io.FileUtil.delete(work.resolve("artifact").toFile()), "Cannot clean fixture artifact");
       require(!Files.exists(work.resolve("artifact/custom/nested/updated.nocache.js")), "Clean left artifact output");
@@ -100,9 +127,21 @@ public class GwtJpsSmoke {
       require(Files.isRegularFile(work.resolve("artifact/custom/nested/updated.nocache.js")), "Rebuild missed artifact output");
       System.out.println("CLEAN_REBUILD_OK");
 
+      Files.writeString(work.resolve("deploy-only"), "deployment");
+      missingScope();
+      build(false, Map.of(), false);
+      require(!Files.exists(work.resolve("artifact/custom/nested/updated.nocache.js")), "Deployment-only artifact retained regular output");
+      require(!symbolMaps().isEmpty(), "Deployment-only artifact lost symbol maps");
+      System.out.println("DEPLOY_ONLY_OK");
+
       source("broken", true);
       build(false, Map.of(), true);
       System.out.println("COMPILE_FAILURE_OK");
+      Files.writeString(work.resolve("disable-gwt"), "disabled");
+      build(false, Map.of(), false, false);
+      require(!Files.exists(work.resolve("artifact/custom/nested/updated.nocache.js")), "Disabled module left stale artifact output");
+      require(symbolMaps().isEmpty(), "Disabled module left deployment symbols");
+      System.out.println("DISABLED_OUTPUT_REMOVAL_OK");
       System.out.println("DONE");
       System.exit(0);
     }
@@ -114,7 +153,7 @@ public class GwtJpsSmoke {
 
   private static JpsModel model() throws java.io.IOException {
     var model = JpsElementFactory.getInstance().createModel();
-    var module = model.getProject().addModule("client", JpsJavaModuleType.INSTANCE);
+    var module = model.getProject().addModule(moduleName(), JpsJavaModuleType.INSTANCE);
     module.addSourceRoot(JpsPathUtil.pathToUrl(work.resolve("src").toString()), JavaSourceRootType.SOURCE);
     var java = JpsJavaExtensionService.getInstance();
     var sdk = java.addJavaSdk(model.getGlobal(), "smoke-jdk", System.getProperty("java.home"));
@@ -122,7 +161,8 @@ public class GwtJpsSmoke {
     module.getSdkReferencesTable().setSdkReference(JpsJavaSdkType.INSTANCE, sdk.getProperties().createReference());
     module.getDependenciesList().addSdkDependency(JpsJavaSdkType.INSTANCE);
     var moduleJava = java.getOrCreateModuleExtension(module);
-    moduleJava.setOutputUrl(JpsPathUtil.pathToUrl(work.resolve("classes").toString()));
+    String output = Files.exists(work.resolve("java-output")) ? Files.readString(work.resolve("java-output")) : "classes";
+    moduleJava.setOutputUrl(JpsPathUtil.pathToUrl(work.resolve(output).toString()));
     moduleJava.setLanguageLevel(LanguageLevel.JDK_17);
     var library = module.addModuleLibrary("real-gwt", JpsJavaLibraryType.INSTANCE);
     try (var jars = Files.walk(repository)) {
@@ -141,10 +181,12 @@ public class GwtJpsSmoke {
     var packaging = new GwtModulePackagingProperties();
     packaging.myName = "Probe";
     packaging.myPath = "/custom/nested";
+    packaging.myEnabled = !Files.exists(work.resolve("disable-gwt"));
     properties.myPackagingStates.add(packaging);
     JpsGwtExtensionService.getInstance().setExtension(module, new JpsGwtModuleExtensionImpl(properties));
     var root = JpsPackagingElementFactory.getInstance().createArtifactRoot();
     for (var kind : JpsGwtCompilerOutputPackagingElement.OutputKind.values()) {
+      if (Files.exists(work.resolve("deploy-only")) && kind == JpsGwtCompilerOutputPackagingElement.OutputKind.REGULAR) continue;
       root.addChild(new JpsGwtCompilerOutputPackagingElement(module.createReference(), kind));
     }
     var artifact = JpsArtifactService.getInstance().addArtifact(model.getProject(), "web", root, DirectoryArtifactType.INSTANCE,
@@ -154,6 +196,10 @@ public class GwtJpsSmoke {
   }
 
   private static List<String> build(boolean rebuild, Map<String, String> parameters, boolean expectErrors) throws Exception {
+    return build(rebuild, parameters, expectErrors, true);
+  }
+
+  private static List<String> build(boolean rebuild, Map<String, String> parameters, boolean expectErrors, boolean includeGwt) throws Exception {
     var messages = new ArrayList<String>();
     var errors = new ArrayList<String>();
     org.jetbrains.jps.incremental.MessageHandler handler = message -> {
@@ -163,17 +209,26 @@ public class GwtJpsSmoke {
       }
     };
     var runner = new BuildRunner(GwtJpsSmoke::model);
-    runner.setBuilderParams(parameters);
+    var builderParameters = new java.util.HashMap<String, String>(parameters);
+    // The public per-build wire format; credentials are intentionally absent.
+    var bytes = new java.io.ByteArrayOutputStream();
+    var data = new java.io.DataOutputStream(bytes);
+    data.writeInt(1);
+    data.writeInt(1);
+    data.writeUTF("fixture");
+    data.writeUTF(repository.toUri().toString());
+    builderParameters.putIfAbsent("org.randombits.gwt.repositories.v1", java.util.Base64.getEncoder().encodeToString(bytes.toByteArray()));
+    runner.setBuilderParams(builderParameters);
     var descriptor = runner.load(handler, work.resolve("cache"), new BuildFSState(true));
     try {
       var scope = TargetTypeBuildScope.newBuilder().setTypeId(ArtifactBuildTargetType.INSTANCE.getTypeId())
         .addTargetId("web").setForceBuild(rebuild).build();
       var scopes = new ArrayList<TargetTypeBuildScope>();
       scopes.add(scope);
-      if (rebuild) {
-        scopes.add(TargetTypeBuildScope.newBuilder().setTypeId(GwtBuildTargetType.TYPE_ID).addTargetId("client").setForceBuild(true).build());
+      if (includeGwt) {
+        scopes.add(TargetTypeBuildScope.newBuilder().setTypeId(GwtBuildTargetType.TYPE_ID).addTargetId(moduleName()).setForceBuild(rebuild).build());
         scopes.add(TargetTypeBuildScope.newBuilder().setTypeId(JavaModuleBuildTargetType.PRODUCTION.getTypeId())
-          .addTargetId("client").setForceBuild(true).build());
+          .addTargetId(moduleName()).setForceBuild(rebuild).build());
       }
       runner.runBuild(descriptor, CanceledStatus.NULL, handler, BuildType.BUILD, scopes, true);
 
@@ -203,6 +258,7 @@ public class GwtJpsSmoke {
   }
 
   private static List<Path> symbolMaps() throws Exception {
+    if (!Files.isDirectory(work.resolve("artifact/WEB-INF/deploy/custom/nested"))) return List.of();
     try (var files = Files.walk(work.resolve("artifact/WEB-INF/deploy/custom/nested"))) {
       return files.filter(p -> p.toString().endsWith(".symbolMap")).toList();
     }
@@ -219,6 +275,15 @@ public class GwtJpsSmoke {
       "public class Probe implements com.google.gwt.core.client.EntryPoint {\n" +
       "public void onModuleLoad() { log(\"" + message + "\"); }\n" +
       "private static native void log(String value) /*-{ " + (invalidJs ? "this is invalid JS" : "console.log(value);") + " }-*/;\n}");
+  }
+
+  private static String moduleName() throws java.io.IOException {
+    return Files.exists(work.resolve("module-name")) ? Files.readString(work.resolve("module-name")) : "client";
+  }
+
+  private static void missingScope() throws Exception {
+    var messages = build(false, Map.of(), true, false);
+    require(messages.stream().anyMatch(s -> s.contains("complete 'gwt' build target")), "Missing-scope error was not actionable");
   }
 
   private static void require(boolean condition, String message) {

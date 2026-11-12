@@ -2,15 +2,23 @@ package org.randombits.intellij.gwt;
 
 import com.intellij.openapi.roots.ui.configuration.artifacts.ArtifactsStructureConfigurableContext;
 import com.intellij.openapi.application.WriteAction;
+import com.intellij.openapi.roots.CompilerModuleExtension;
+import com.intellij.openapi.roots.CompilerProjectExtension;
+import com.intellij.openapi.roots.ModuleRootManager;
+import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.newvfs.impl.VfsRootAccess;
 import com.intellij.packaging.artifacts.Artifact;
 import com.intellij.packaging.artifacts.ArtifactManager;
 import com.intellij.packaging.impl.artifacts.ArtifactUtil;
 import com.intellij.packaging.impl.artifacts.PlainArtifactType;
+import com.intellij.packaging.impl.compiler.ArtifactCompileScope;
+import com.intellij.packaging.elements.PackagingElementFactory;
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
+import com.intellij.testFramework.VfsTestUtil;
 import com.intellij.util.ui.UIUtil;
 import org.jdom.Element;
 import org.jetbrains.idea.maven.model.MavenExplicitProfiles;
@@ -22,6 +30,11 @@ import org.randombits.intellij.gwt.facet.GwtFacet;
 import org.randombits.intellij.gwt.facet.GwtFacetArtifactValidator;
 import org.randombits.intellij.gwt.maven.GwtFacetImporter;
 import org.randombits.intellij.gwt.packaging.GwtCompilerOutputElementType;
+import org.randombits.intellij.gwt.packaging.GwtCompilerDeployOutputElement;
+import org.randombits.intellij.gwt.build.GwtBuildTargetScopeProvider;
+import org.randombits.intellij.gwt.jps.model.GwtRepositoryConfiguration;
+import com.intellij.jarRepository.RemoteRepositoriesConfiguration;
+import com.intellij.jarRepository.RemoteRepositoryDescription;
 
 import java.nio.file.Path;
 import java.lang.reflect.Proxy;
@@ -94,6 +107,132 @@ public class GwtArtifactIntegrationTest extends LightJavaCodeInsightFixtureTestC
 
     reimport(new java.io.File(FileUtil.getTempDirectory(), "gwt-validated-output").getAbsolutePath());
     assertTrue(validator.check().isOk());
+  }
+
+  public void testDeploymentOnlyArtifactIncludesGwtAndJavaBuildScopes() {
+    WriteAction.run(() -> {
+      var manager = ArtifactManager.getInstance(getProject());
+      var model = manager.createModifiableModel();
+      var root = PackagingElementFactory.getInstance().createArtifactRootElement();
+      root.addOrFindChild(new GwtCompilerDeployOutputElement(getProject(), facet));
+      model.addArtifact("deploy-only", PlainArtifactType.getInstance(), root);
+      model.commit();
+    });
+    var artifact = ArtifactManager.getInstance(getProject()).findArtifact("deploy-only");
+    assertNotNull(artifact);
+    var scope = ArtifactCompileScope.createArtifactsScope(getProject(), List.of(artifact), true);
+    var scopes = new GwtBuildTargetScopeProvider().getBuildTargetScopes(scope, getProject(), false);
+    assertEquals(2, scopes.size());
+    assertTrue(scopes.stream().anyMatch(s -> s.getTypeId().equals("gwt") && s.getTargetIdList().contains(getModule().getName()) && s.getForceBuild()));
+    assertTrue(scopes.stream().anyMatch(s -> s.getTypeId().equals("java-production") && s.getTargetIdList().contains(getModule().getName())));
+  }
+
+  public void testRepositorySnapshotRefreshesOnEveryBuildAndExportsWithoutGwtScope() {
+    var configuration = RemoteRepositoriesConfiguration.getInstance(getProject());
+    var original = configuration.getRepositories();
+    var scope = ArtifactCompileScope.createArtifactsScope(getProject(), List.of());
+    var provider = new GwtBuildTargetScopeProvider();
+    try {
+      for (String id : List.of("first-build", "second-build")) {
+        configuration.setRepositories(List.of(new RemoteRepositoryDescription(id, "Fixture", "file:///fixture/" + id)));
+        assertEmpty(provider.getBuildTargetScopes(scope, getProject(), false));
+        String encoded = scope.exportUserData().entrySet().stream()
+          .filter(entry -> entry.getKey().toString().equals(GwtRepositoryConfiguration.BUILDER_PARAMETER))
+          .map(entry -> entry.getValue().toString()).findFirst().orElseThrow();
+        var repositories = GwtRepositoryConfiguration.decode(encoded);
+        assertEquals(1, repositories.size());
+        assertEquals(id, repositories.getFirst().id);
+        assertEquals("file:///fixture/" + id, repositories.getFirst().url);
+      }
+    }
+    finally {
+      configuration.setRepositories(original);
+    }
+  }
+
+  public void testGeneratedContainerIsExcludedAfterCompilerOutputChanges() throws Exception {
+    checkGeneratedContainerAfterOutputChanges(false);
+  }
+
+  public void testInheritedGeneratedContainerIsExcludedAfterCompilerOutputChanges() throws Exception {
+    checkGeneratedContainerAfterOutputChanges(true);
+  }
+
+  private void checkGeneratedContainerAfterOutputChanges(boolean inheritOutput) throws Exception {
+    var projectExtension = CompilerProjectExtension.getInstance(getProject());
+    assertNotNull(projectExtension);
+    String originalProjectOutput = projectExtension.getCompilerOutputUrl();
+    var extension = CompilerModuleExtension.getInstance(getModule());
+    assertNotNull(extension);
+    String original = extension.getCompilerOutputUrl();
+    boolean inherited = extension.isCompilerOutputPathInherited();
+    var directory = FileUtil.createTempDirectory("gwt-output-index", "");
+    Disposer.register(getTestRootDisposable(), () -> FileUtil.delete(directory));
+    VfsRootAccess.allowRootAccess(getTestRootDisposable(), directory.getAbsolutePath());
+    var content = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(directory);
+    assertNotNull(content);
+    WriteAction.run(() -> {
+      var model = ModuleRootManager.getInstance(getModule()).getModifiableModel();
+      model.addContentEntry(content);
+      model.commit();
+    });
+    try {
+      for (String output : List.of("first-production", "second-production")) {
+        var classesFile = new java.io.File(directory, output + "/classes");
+        FileUtil.createDirectory(classesFile);
+        var classes = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(classesFile);
+        assertNotNull(classes);
+        if (inheritOutput) {
+          WriteAction.run(() -> projectExtension.setCompilerOutputUrl(classes.getUrl()));
+        }
+        configureCompilerOutput(classes.getUrl(), inheritOutput);
+        var production = Path.of(VfsUtilCore.urlToPath(
+          CompilerModuleExtension.getInstance(getModule()).getCompilerOutputUrl()));
+        FileUtil.createDirectory(production.getParent().toFile());
+        var parent = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(production.getParent());
+        assertNotNull(parent);
+        // Establish known absence so refresh emits a create event instead of initial discovery.
+        parent.getChildren();
+        var containerFile = production.getParent().resolve(".intellij-gwt").toFile();
+        FileUtil.createDirectory(containerFile);
+        var container = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(containerFile);
+        assertNotNull(container);
+        var generatedFile = new java.io.File(containerFile, "key/generated.js");
+        FileUtil.writeToFile(generatedFile, "generated");
+        var generated = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(generatedFile);
+        assertNotNull(generated);
+        // Creation of a previously missing excluded root delivers deferred VFS/index updates.
+        VfsTestUtil.syncRefresh();
+        assertTrue("Generated output must be excluded at production paths: " + output,
+                   ProjectFileIndex.getInstance(getProject()).isExcluded(generated));
+        if (output.equals("first-production")) {
+          WriteAction.run(() -> {
+            var model = com.intellij.facet.FacetManager.getInstance(getModule()).createModifiableModel();
+            model.removeFacet(facet);
+            model.commit();
+          });
+        }
+      }
+    }
+    finally {
+      WriteAction.run(() -> projectExtension.setCompilerOutputUrl(originalProjectOutput));
+      configureCompilerOutput(original, inherited);
+      WriteAction.run(() -> {
+        var model = ModuleRootManager.getInstance(getModule()).getModifiableModel();
+        for (var entry : model.getContentEntries()) if (entry.getUrl().equals(content.getUrl())) model.removeContentEntry(entry);
+        model.commit();
+      });
+    }
+  }
+
+  private void configureCompilerOutput(String url, boolean inherited) {
+    WriteAction.run(() -> {
+      var model = ModuleRootManager.getInstance(getModule()).getModifiableModel();
+      var extension = model.getModuleExtension(CompilerModuleExtension.class);
+      extension.inheritCompilerOutputPath(inherited);
+      extension.setCompilerOutputPath(url);
+      model.commit();
+    });
   }
 
   private void assertContainsGwtOutput(Artifact artifact) {

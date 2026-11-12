@@ -24,29 +24,40 @@ public class GwtJpsSdkSmokeTest extends LightPlatformTestCase {
                       repository != null && !repository.isBlank());
     assertTrue(Files.isRegularFile(Path.of(repository, "org/gwtproject/gwt-dev/2.13.1/gwt-dev-2.13.1.jar")));
     Path directory = FileUtil.createTempDirectory("gwt-jps-smoke", "").toPath();
-    Path log = directory.resolve("smoke.log");
-    Process process = null;
     try {
-      var classpath = new LinkedHashSet<>(ClasspathBootstrap.getBuildProcessApplicationClasspath());
-      classpath.add(ClasspathBootstrap.getResourcePath(GwtBuilder.class));
-      var command = new ArrayList<String>();
-      command.add(Path.of(System.getProperty("java.home"), "bin", "java").toString());
-      ClasspathBootstrap.configureReflectionOpenPackages(command::add);
-      command.addAll(java.util.List.of("-Djava.awt.headless=true", "-cp", String.join(File.pathSeparator, classpath),
-        Path.of(System.getProperty("gwt.test.data.path"), "jps", "GwtJpsSmoke.java").toString(), repository, directory.toString()));
-      process = new ProcessBuilder(command).redirectErrorStream(true).redirectOutput(log.toFile()).start();
-      Process child = process;
+      String legacy = System.getenv("GWT_JPS_SMOKE_LEGACY_PLUGIN_JAR");
+      if (legacy != null && !legacy.isBlank()) {
+        assertTrue("Missing pre-relocation plugin JAR", Files.isRegularFile(Path.of(legacy)));
+        run(repository, directory, legacy, "legacy-seed");
+      }
+      run(repository, directory, ClasspathBootstrap.getResourcePath(GwtBuilder.class), "current");
+    }
+    finally {
+      FileUtil.delete(directory.toFile());
+    }
+  }
+
+  private static void run(String repository, Path directory, String pluginPath, String mode) throws Exception {
+    Path log = directory.resolve(mode + ".log");
+    var classpath = new LinkedHashSet<>(ClasspathBootstrap.getBuildProcessApplicationClasspath());
+    classpath.add(pluginPath);
+    var command = new ArrayList<String>();
+    command.add(Path.of(System.getProperty("java.home"), "bin", "java").toString());
+    ClasspathBootstrap.configureReflectionOpenPackages(command::add);
+    command.addAll(java.util.List.of("-Djava.awt.headless=true", "-cp", String.join(File.pathSeparator, classpath),
+      Path.of(System.getProperty("gwt.test.data.path"), "jps", "GwtJpsSmoke.java").toString(), repository, directory.toString(), mode));
+    Process child = new ProcessBuilder(command).redirectErrorStream(true).redirectOutput(log.toFile()).start();
+    try {
       PlatformTestUtil.waitWithEventsDispatching("Real JPS/GWT smoke timed out", () -> !child.isAlive(), 480);
       String output = output(log);
       assertEquals(output, 0, child.exitValue());
-      assertTrue(output, output.contains("DONE"));
+      assertTrue(output, output.contains(mode.equals("legacy-seed") ? "LEGACY_SEED_OK" : "DONE"));
     }
     finally {
-      if (process != null && process.isAlive()) {
-        process.destroyForcibly();
-        assertTrue(process.waitFor(5, TimeUnit.SECONDS));
+      if (child.isAlive()) {
+        child.destroyForcibly();
+        assertTrue(child.waitFor(5, TimeUnit.SECONDS));
       }
-      FileUtil.delete(directory.toFile());
     }
   }
 

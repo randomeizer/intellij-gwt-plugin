@@ -30,7 +30,7 @@ public class JpsGwtModelSerializerExtension extends JpsModelSerializerExtension 
 
   @Override
   public @NotNull List<? extends JpsProjectExtensionSerializer> getProjectExtensionSerializers() {
-    return Collections.singletonList(new JpsGwtWorkspaceConfigurationSerializer());
+    return Arrays.asList(new JpsGwtWorkspaceConfigurationSerializer(), new JpsGwtRepositoryConfigurationSerializer());
   }
 
   @Override

@@ -37,6 +37,11 @@ public class JpsGwtExtensionServiceImpl extends JpsGwtExtensionService {
     return index;
   }
 
+  @Override
+  public @NotNull JpsGwtModuleIndex getGwtModuleIndex(@NotNull JpsModel model) {
+    return myCachedGwtIndices.computeIfAbsent(model, JpsGwtModuleIndexImpl::new);
+  }
+
   @TestOnly
   public void clearCache() {
     myCachedGwtIndices.clear();

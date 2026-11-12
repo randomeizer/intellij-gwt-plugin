@@ -23,10 +23,17 @@ public class JpsGwtModuleIndexImpl implements JpsGwtModuleIndex {
   private final Map<JpsGwtModule, InheritedModulesInfo> myInheritanceMap;
   
   public JpsGwtModuleIndexImpl(JpsModel model, BuildDataPaths buildDataPaths) {
+    this(new JpsGwtModulesCache(buildDataPaths).loadGwtModules(model));
+  }
+
+  public JpsGwtModuleIndexImpl(JpsModel model) {
+    this(JpsGwtModulesCache.findGwtModules(model));
+  }
+
+  private JpsGwtModuleIndexImpl(List<JpsGwtModule> gwtModules) {
     myModules = new MultiMap<>();
     myModulesByName = new MultiMap<>();
     myInheritanceMap = new HashMap<>();
-    List<JpsGwtModule> gwtModules = new JpsGwtModulesCache(buildDataPaths).loadGwtModules(model);
     for (JpsGwtModule gwtModule : gwtModules) {
       myModules.putValue(gwtModule.getModule(), gwtModule);
       myModulesByName.putValue(gwtModule.getQualifiedName(), gwtModule);
