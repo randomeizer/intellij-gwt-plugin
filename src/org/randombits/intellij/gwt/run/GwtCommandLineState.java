@@ -170,7 +170,8 @@ public final class GwtCommandLineState extends JavaCommandLineStateEx {
     myRunConfigurationState = configuration.getGwtState();
     myRunConfigurationName = environment.getRunProfile().getName();
     myServer = server;
-    myModuleDir = PathMacroUtil.getModuleDir(myModule.getModuleFilePath());
+    String moduleDirectory = PathMacroManager.getInstance(myModule).expandPath("$MODULE_DIR$");
+    myModuleDir = "$MODULE_DIR$".equals(moduleDirectory) ? null : moduleDirectory;
     if (isUseRemoteUi()) {
       myUiConnection = new RemoteUiConnection(configuration, facet.getSdkVersion(), myRunConfigurationState.OPEN_IN_BROWSER,
                                               myRunConfigurationState.START_JAVASCRIPT_DEBUGGER,

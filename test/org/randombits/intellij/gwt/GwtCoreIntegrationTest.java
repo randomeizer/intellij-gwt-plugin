@@ -6,6 +6,9 @@ import com.intellij.facet.impl.DefaultFacetsProvider;
 import com.intellij.facet.ui.FacetEditorContext;
 import com.intellij.facet.ui.FacetEditorValidator;
 import com.intellij.facet.ui.FacetValidatorsManager;
+import com.intellij.openapi.components.PathMacroManager;
+import com.intellij.openapi.module.Module;
+import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.psi.xml.XmlFile;
 import com.intellij.psi.PsiManager;
@@ -15,15 +18,18 @@ import com.intellij.util.ui.UIUtil;
 import org.randombits.intellij.gwt.facet.GwtFacet;
 import org.randombits.intellij.gwt.facet.GwtFacetEditor;
 import org.randombits.intellij.gwt.facet.GwtFacetArtifactValidator;
+import org.randombits.intellij.gwt.icons.GwtIcons;
 import org.randombits.intellij.gwt.junit.GwtJUnitPatcher;
 import org.randombits.intellij.gwt.make.GwtCompilerPaths;
 import org.randombits.intellij.gwt.module.GwtModulesManager;
 import org.randombits.intellij.gwt.run.GwtClasspathUtil;
 import org.randombits.intellij.gwt.web.GwtWebUtil;
+import org.jetbrains.jps.model.serialization.PathMacroUtil;
 
 import javax.swing.JComponent;
 import javax.swing.JTable;
 import java.awt.Component;
+import java.io.File;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
@@ -111,6 +117,45 @@ public class GwtCoreIntegrationTest extends LightJavaCodeInsightFixtureTestCase 
     finally {
       editor.disposeUIResources();
     }
+  }
+
+  public void testOutputCacheRetainsConventionalModuleIdentity() {
+    Module module = moduleAt("client", "/modules/with spaces/client.iml");
+    assertEquals("client.4efd10e4", GwtCompilerPaths.getOutputRoot(module).getName());
+  }
+
+  public void testOutputCacheDistinguishesModuleLocations() {
+    Module module = moduleAt("client", "/modules/other/client.iml");
+    assertEquals("client.6a99bc3b", GwtCompilerPaths.getOutputRoot(module).getName());
+  }
+
+  public void testTestOutputPathsDoNotRequirePersistedModuleFile() {
+    Module module = moduleAt("client", "/modules/with spaces/not-persisted.iml");
+    File root = GwtCompilerPaths.getOutputRoot(module);
+    assertEquals("client.4efd10e4", root.getName());
+    assertEquals(new File(root, "test/gen"), GwtCompilerPaths.getTestGenDirectory(module));
+    assertEquals(new File(root, "test/www"), GwtCompilerPaths.getTestOutputDirectory(module));
+  }
+
+  public void testModuleDirectoryMacroPreservesWorkingDirectory() {
+    String directory = ModuleUtilCore.getModuleDirPath(getModule());
+    assertEquals(PathMacroUtil.getModuleDir(directory + "/fixture.iml"),
+                 PathMacroManager.getInstance(getModule()).expandPath("$MODULE_DIR$"));
+  }
+
+  public void testPluginIconLoads() {
+    assertTrue(GwtIcons.GoogleSmall.getIconWidth() > 0);
+    assertTrue(GwtIcons.GoogleSmall.getIconHeight() > 0);
+  }
+
+  private Module moduleAt(String name, String moduleFilePath) {
+    return (Module)Proxy.newProxyInstance(Module.class.getClassLoader(), new Class<?>[]{Module.class},
+      (proxy, method, arguments) -> switch (method.getName()) {
+        case "getName" -> name;
+        case "getModuleFilePath" -> moduleFilePath;
+        case "getProject" -> getProject();
+        default -> throw new UnsupportedOperationException(method.getName());
+      });
   }
 
   private FacetEditorContext editorContext() {
