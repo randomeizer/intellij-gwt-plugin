@@ -1,9 +1,8 @@
 # Quarantined tests
 
 These test sources were extracted from the original `intellij.gwt` plugin but are **not compiled**
-by the standalone Gradle build. They depend on JetBrains test frameworks and/or SDKs that are **not
-distributed** with the released IntelliJ IDEA Ultimate build, so they cannot compile against the
-public IntelliJ Platform artifact:
+by the standalone Gradle build. Reasons for their original exclusion include test frameworks and/or
+SDKs unavailable on the standalone classpath, plus suites awaiting targeted restoration:
 
 - **JavaEE-web test framework** — `com.intellij.ee.core.javaee.JavaeeTestUtil`,
   `com.intellij.testFramework.builders.WebModuleFixtureBuilder`
@@ -14,8 +13,10 @@ public IntelliJ Platform artifact:
 - **Grazie / spellchecker test support** — `com.intellij.grazie.*`.
 - **Artifact-compiler test base** — `com.intellij.compiler.artifacts.ArtifactCompilerTestCase`.
 - **GWT SDK** — `com.google.gwt.dev.*` (requires a real GWT distribution on the test classpath).
-- **Maven test-framework fixtures** newer than the released platform ships
-  (`getFacet`, `waitForImportWithinTimeout`) — `GwtLtgtFacetImporterTest.kt`.
+- **Legacy Maven importer suite** — `GwtLtgtFacetImporterTest.kt` remains excluded pending its own
+  dependency and version-matrix validation. The 263.7307.200 Maven framework now includes `getFacet`
+  and `waitForImportWithinTimeout`; the active `GwtCodehausSourcesImportTest.kt` uses the published
+  Maven fixtures. This availability does not automatically restore the legacy suite.
 
 The tests that only need the publicly available Platform / Java / Maven test frameworks remain under
 `../test/` and are compiled by the build.

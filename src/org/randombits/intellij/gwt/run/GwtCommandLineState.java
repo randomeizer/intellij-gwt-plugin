@@ -47,6 +47,7 @@ import org.randombits.intellij.gwt.sdk.GwtVersion;
 import com.intellij.ide.BrowserUtil;
 import com.intellij.ide.browsers.WebBrowserManager;
 import com.intellij.jarRepository.JarRepositoryManager;
+import org.jetbrains.idea.maven.utils.library.RepositoryLibraryProperties;
 import com.intellij.javaee.artifact.JavaeeArtifactUtil;
 import com.intellij.javaee.web.WebRoot;
 import com.intellij.javaee.web.artifact.WebArtifactUtil;
@@ -99,13 +100,11 @@ import org.jdom.JDOMException;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.idea.maven.aether.ArtifactKind;
 import org.randombits.intellij.gwt.jps.build.common.DelegatingOutputLineReader;
 import org.randombits.intellij.gwt.jps.build.common.OutputLineReader;
 import org.randombits.intellij.gwt.jps.model.GwtDependenciesResolver;
 import org.randombits.intellij.gwt.jps.model.MavenCoordinates;
 import org.randombits.intellij.gwt.jps.model.impl.sdk.JpsGwtDependenciesStorage;
-import org.jetbrains.jps.model.library.JpsMavenRepositoryLibraryDescriptor;
 import org.jetbrains.jps.model.serialization.PathMacroUtil;
 
 import java.io.File;
@@ -726,12 +725,13 @@ public final class GwtCommandLineState extends JavaCommandLineStateEx {
       // invokeAndWait is not allowed under read action, so we can only refresh asynchronously
       ApplicationManager.getApplication().invokeLater(() -> {
         for (MavenCoordinates coordinate : coordinates) {
-          JpsMavenRepositoryLibraryDescriptor descriptor =
-            new JpsMavenRepositoryLibraryDescriptor(coordinate.groupId, coordinate.artifactId, coordinate.version);
+          RepositoryLibraryProperties properties =
+            new RepositoryLibraryProperties(coordinate.groupId, coordinate.artifactId, coordinate.version);
           Collection<OrderRoot> roots = JarRepositoryManager.loadDependenciesModal(
             myProject,
-            descriptor,
-            Collections.singleton(ArtifactKind.ARTIFACT),
+            properties,
+            false,
+            false,
             null,
             null
           );

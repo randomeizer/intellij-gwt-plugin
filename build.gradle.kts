@@ -213,6 +213,9 @@ tasks {
     test {
         useJUnitPlatform()
         classpath += sourceSets["test"].runtimeClasspath
+        // Maven's forked server locates telemetry by owning JAR. Prefer the SDK's
+        // merged JAR over the Maven test framework's split telemetry dependencies.
+        classpath = files(intellijPlatform.platformPath.resolve("lib/intellij.libraries.opentelemetry.jar")) + classpath
         exclude("**/GwtFreeEditionTest.class")
         providers.gradleProperty("test.idea.home.path").orNull?.takeIf { it.isNotBlank() }?.let {
             systemProperty("idea.home.path", it)
