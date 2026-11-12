@@ -1,7 +1,7 @@
 # Randombits GWT Support
 
 Standalone source for an independently maintained IntelliJ IDEA GWT plugin
-(`org.randombits.intellij.gwt`), extracted from
+(`org.randombits.gwtplugin`), extracted from
 [JetBrains/intellij-obsolete-plugins](https://github.com/JetBrains/intellij-obsolete-plugins/tree/master/gwt).
 The plugin adds Google Web Toolkit support to IntelliJ IDEA, including free mode in the unified product.
 
@@ -59,6 +59,14 @@ modules: in 263 they transitively depend on subscription-only modules. An option
 adapter keeps those types out of core facet, editor, action, reference, and importer signatures.
 
 ## Continuous integration and releases
+
+For the Marketplace investigation, submission requirements, and local preparation commands,
+see [Marketplace publishing](docs/marketplace-publishing.md). GitHub releases and Marketplace
+uploads are separate; the first Marketplace upload must be made manually.
+
+The plugin ID is now `org.randombits.gwtplugin`. If you installed an earlier ZIP using
+`org.randombits.intellij.gwt`, uninstall that copy before installing the new one to avoid
+loading both integrations. The old ID is rejected for a new Marketplace listing.
 
 GitHub Actions runs `./gradlew check buildPlugin` for pull requests and pushes to `main`, using
 Java 25. Successful `main` builds upload the plugin ZIP as the `latest-main-build` workflow
