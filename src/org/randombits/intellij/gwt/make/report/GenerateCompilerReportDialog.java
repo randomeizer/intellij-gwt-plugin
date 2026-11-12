@@ -15,8 +15,7 @@ import com.intellij.openapi.compiler.CompilerManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.util.io.FileUtil;
-import com.intellij.ui.dsl.listCellRenderer.LcrJavaHelper;
-import com.intellij.ui.dsl.listCellRenderer.RendererPresentation;
+import com.intellij.ui.SimpleListCellRenderer;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
@@ -29,6 +28,7 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JPanel;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
@@ -90,10 +90,13 @@ public class GenerateCompilerReportDialog extends DialogWrapper {
     }
 
     myModuleComboBox.setModel(model);
-    myModuleComboBox.setRenderer(LcrJavaHelper.create(
-      "",
-      value -> new RendererPresentation(GwtIcons.GoogleSmall, value.getQualifiedName())
-    ));
+    myModuleComboBox.setRenderer(new SimpleListCellRenderer<GwtModule>() {
+      @Override
+      public void customize(JList<? extends GwtModule> list, GwtModule value, int index, boolean selected, boolean hasFocus) {
+        setText(value == null ? "" : value.getQualifiedName());
+        setIcon(value == null ? null : GwtIcons.GoogleSmall);
+      }
+    });
     myModuleComboBox.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {

@@ -55,8 +55,7 @@ import com.intellij.ui.ScrollPaneFactory;
 import com.intellij.ui.TableUtil;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.dsl.listCellRenderer.BuilderKt;
-import com.intellij.ui.dsl.listCellRenderer.LcrJavaHelper;
-import com.intellij.ui.dsl.listCellRenderer.RendererPresentation;
+import com.intellij.ui.SimpleListCellRenderer;
 import com.intellij.ui.table.TableView;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
@@ -76,6 +75,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.JTextField;
@@ -274,10 +274,13 @@ public class GwtFacetEditor extends FacetEditorTab {
     myWebFacetBox.setSelectedIndex(0);
 
     setupGwtOutputStyleCombobox(myOutputStyleBox);
-    myWebFacetBox.setRenderer(LcrJavaHelper.create(
-      GwtBundle.message("label.none.facet.selected"),
-      value -> new RendererPresentation(webSupport == null ? null : webSupport.getWebFacetIcon(module, value), value)
-    ));
+    myWebFacetBox.setRenderer(new SimpleListCellRenderer<String>() {
+      @Override
+      public void customize(JList<? extends String> list, String value, int index, boolean selected, boolean hasFocus) {
+        setText(value == null ? GwtBundle.message("label.none.facet.selected") : value);
+        setIcon(value == null || webSupport == null ? null : webSupport.getWebFacetIcon(module, value));
+      }
+    });
 
     validatorsManager.registerValidator(new FacetEditorValidator() {
       @Override
