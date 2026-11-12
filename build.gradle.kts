@@ -212,6 +212,10 @@ tasks {
 
     test {
         useJUnitPlatform()
+        inputs.dir(layout.projectDirectory.dir("testData")).withPropertyName("gwtTestData")
+        inputs.property("gwtRemoteUiSmokeJars", providers.environmentVariable("GWT_REMOTE_UI_SMOKE_JARS").orElse(""))
+        inputs.property("gwtJpsSmokeRepository", providers.environmentVariable("GWT_JPS_SMOKE_REPOSITORY").orElse(""))
+        inputs.property("gwtJpsLegacyPlugin", providers.environmentVariable("GWT_JPS_SMOKE_LEGACY_PLUGIN_JAR").orElse(""))
         classpath += sourceSets["test"].runtimeClasspath
         // Maven's forked server locates telemetry by owning JAR. Prefer the SDK's
         // merged JAR over the Maven test framework's split telemetry dependencies.

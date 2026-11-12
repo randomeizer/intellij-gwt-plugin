@@ -37,7 +37,6 @@ import org.jetbrains.jps.incremental.CompileContext;
 import org.jetbrains.jps.incremental.ExternalProcessUtil;
 import org.jetbrains.jps.incremental.ProjectBuildException;
 import org.jetbrains.jps.incremental.TargetBuilder;
-import org.jetbrains.jps.incremental.dependencies.DependencyResolvingBuilder;
 import org.jetbrains.jps.incremental.messages.BuildMessage;
 import org.jetbrains.jps.incremental.messages.CompilerMessage;
 import org.jetbrains.jps.incremental.messages.ProgressMessage;
@@ -87,9 +86,14 @@ public final class GwtBuilder extends TargetBuilder<BuildRootDescriptor, GwtBuil
     final String compileReportModuleName = extension.getModule().getName().equals(GwtBuilderParameters.getCompileReportModuleName(context))
                                                  ? GwtBuilderParameters.getCompileReportGwtModuleQualifiedName(context) : null;
     final Set<JpsGwtModule> modulesToRecompile = new LinkedHashSet<>();
+    boolean outputMissing = !JpsGwtCompilerPaths.getCompilerOutputRoot(target).isDirectory();
 
     for (JpsGwtModule gwtModule : index.getModules(extension, true, false)) {
       if (!compilerConfiguration.getCompilerExcludes().isExcluded(gwtModule.getModuleFile().toFile())) {
+        if (outputMissing && index.isCompilable(gwtModule, extension)) {
+          // Relocation or a build-tool clean must regenerate output even with retained source stamps.
+          modulesToRecompile.add(gwtModule);
+        }
         if (gwtModule.getQualifiedName().equals(compileReportModuleName) && index.isCompilable(gwtModule, extension)) {
           modulesToRecompile.add(gwtModule);
         }
@@ -161,7 +165,8 @@ public final class GwtBuilder extends TargetBuilder<BuildRootDescriptor, GwtBuil
     JpsSdk<JpsDummyElement> sdk = JavaBuilderUtil.ensureModuleHasJdk(module, context, getCompilerName());
 
     BuildDataPaths dataPaths = context.getProjectDescriptor().dataManager.getDataPaths();
-    final File outputDir = JpsGwtCompilerPaths.getCompilerOutputRoot(target, dataPaths);
+    JpsGwtCompilerPaths.prepareOutputLocation(module);
+    final File outputDir = JpsGwtCompilerPaths.getCompilerOutputRoot(target);
     if (!outputDir.mkdirs() && !outputDir.isDirectory()) {
       LOG.warn("Failed to create GWT compiler output directory: " + outputDir);
     }
@@ -175,7 +180,7 @@ public final class GwtBuilder extends TargetBuilder<BuildRootDescriptor, GwtBuil
     vmOptions.add("-Xmx" + extension.getCompilerMaximumHeapSize() + "m");
 
     List<String> parameters = new ArrayList<>(ParametersListUtil.parse(extension.getCompilerParameters()));
-    File extraOutputRoot = JpsGwtCompilerPaths.getExtraOutputRoot(target, dataPaths);
+    File extraOutputRoot = JpsGwtCompilerPaths.getExtraOutputRoot(target);
     if (generateReport) {
       parameters.add("-compileReport");
       parameters.add("-extra");
@@ -296,7 +301,7 @@ public final class GwtBuilder extends TargetBuilder<BuildRootDescriptor, GwtBuil
 
     @Override
     public @NotNull List<String> resolveDependencies(@NotNull String groupId, @NotNull String artifactId, @NotNull String version) {
-      ArtifactRepositoryManager repositoryManager = DependencyResolvingBuilder.getRepositoryManager(myCompileContext);
+      ArtifactRepositoryManager repositoryManager = GwtJpsRepositoryManager.get(myCompileContext);
       try {
         return myDependenciesStorage.getDependenciesPaths(groupId, artifactId, version);
       }
@@ -320,7 +325,7 @@ public final class GwtBuilder extends TargetBuilder<BuildRootDescriptor, GwtBuil
 
     @Override
     public @NotNull List<String> resolveAnyOf(@NotNull Collection<MavenCoordinates> alternatives) {
-      ArtifactRepositoryManager repositoryManager = DependencyResolvingBuilder.getRepositoryManager(myCompileContext);
+      ArtifactRepositoryManager repositoryManager = GwtJpsRepositoryManager.get(myCompileContext);
 
       List<CompilerMessage> compilerMessages = new ArrayList<>();
 

@@ -10,7 +10,6 @@ import com.intellij.util.xmlb.annotations.XCollection;
 import org.jdom.Element;
 import org.jdom.JDOMException;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.jps.builders.impl.BuildDataPathsImpl;
 import org.jetbrains.jps.builders.storage.BuildDataPaths;
 import org.randombits.intellij.gwt.jps.build.GwtBuildTargetType;
 import org.randombits.intellij.gwt.jps.index.GwtModuleXmlConstants;
@@ -38,7 +37,7 @@ public final class JpsGwtModulesCache {
   }
 
   public JpsGwtModulesCache(@NotNull Path projectSystemDirectory) {
-    this(new BuildDataPathsImpl(projectSystemDirectory));
+    cacheFile = projectSystemDirectory.resolve("targets").resolve(GwtBuildTargetType.INSTANCE.getTypeId()).resolve("gwt-modules.xml");
   }
 
   public void saveGwtModules(@NotNull GwtModulesConfiguration configuration) {
@@ -81,7 +80,7 @@ public final class JpsGwtModulesCache {
     return result;
   }
 
-  private static List<JpsGwtModule> findGwtModules(JpsModel model) {
+  public static List<JpsGwtModule> findGwtModules(JpsModel model) {
     List<JpsGwtModule> result = new ArrayList<>();
     for (JpsModule module : model.getProject().getModules()) {
       JpsGwtModuleExtension extension = JpsGwtExtensionService.getInstance().getExtension(module);

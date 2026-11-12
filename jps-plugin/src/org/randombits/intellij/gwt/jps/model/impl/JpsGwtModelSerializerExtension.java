@@ -6,6 +6,7 @@ import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.randombits.intellij.gwt.jps.model.JpsGwtModuleExtension;
 import org.jetbrains.jps.model.JpsElement;
+import org.jetbrains.jps.model.JpsElementFactory;
 import org.jetbrains.jps.model.JpsProject;
 import org.jetbrains.jps.model.module.JpsModule;
 import org.jetbrains.jps.model.module.JpsModuleReference;
@@ -13,7 +14,6 @@ import org.jetbrains.jps.model.serialization.JpsModelSerializerExtension;
 import org.jetbrains.jps.model.serialization.JpsProjectExtensionSerializer;
 import org.jetbrains.jps.model.serialization.artifact.JpsPackagingElementSerializer;
 import org.jetbrains.jps.model.serialization.facet.JpsFacetConfigurationSerializer;
-import org.jetbrains.jps.model.serialization.facet.JpsFacetSerializer;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -30,7 +30,7 @@ public class JpsGwtModelSerializerExtension extends JpsModelSerializerExtension 
 
   @Override
   public @NotNull List<? extends JpsProjectExtensionSerializer> getProjectExtensionSerializers() {
-    return Collections.singletonList(new JpsGwtWorkspaceConfigurationSerializer());
+    return Arrays.asList(new JpsGwtWorkspaceConfigurationSerializer(), new JpsGwtRepositoryConfigurationSerializer());
   }
 
   @Override
@@ -71,7 +71,8 @@ public class JpsGwtModelSerializerExtension extends JpsModelSerializerExtension 
 
     @Override
     public JpsGwtCompilerOutputPackagingElement load(Element element) {
-      JpsModuleReference moduleReference = JpsFacetSerializer.createModuleReference(element.getAttributeValue(PACKAGING_FACET_ATTRIBUTE));
+      String facetId = element.getAttributeValue(PACKAGING_FACET_ATTRIBUTE);
+      JpsModuleReference moduleReference = JpsElementFactory.getInstance().createModuleReference(facetId.substring(0, facetId.indexOf('/')));
       return new JpsGwtCompilerOutputPackagingElement(moduleReference, myOutputKind);
     }
   }
