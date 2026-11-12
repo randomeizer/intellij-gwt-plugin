@@ -505,6 +505,7 @@ public final class GwtCommandLineState extends JavaCommandLineStateEx {
       FileUtil.delete(unitCacheDir);
     }
     final ProcessHandler processHandler = startProcess();
+    GwtCodeServerUrls.attach(processHandler, getJavaParameters().getProgramParametersList().getParameters(), myRunConfigurationState.RUN_PAGE);
     mainConsole.attachToProcess(processHandler);
 
     processHandler.putUserData(GWT_GENERATOR_KEY, generator);

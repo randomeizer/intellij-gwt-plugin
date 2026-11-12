@@ -1,7 +1,5 @@
 package org.randombits.intellij.gwt.run;
 
-import com.intellij.execution.ExecutionManager;
-import com.intellij.execution.process.ProcessHandler;
 import org.randombits.intellij.gwt.GwtBundle;
 import org.randombits.intellij.gwt.module.GwtModulesManager;
 import org.randombits.intellij.gwt.module.model.GwtModule;
@@ -15,116 +13,147 @@ import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.IndexNotReadyException;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectRootManager;
-import com.intellij.openapi.util.Key;
+import com.intellij.openapi.roots.LibraryOrderEntry;
+import com.intellij.openapi.roots.OrderRootType;
 import com.intellij.openapi.util.NlsContexts;
-import com.intellij.openapi.vfs.StandardFileSystems;
 import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.pom.Navigatable;
 import com.intellij.psi.JavaPsiFacade;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.Url;
 import com.intellij.util.Urls;
 import com.jetbrains.javascript.debugger.FileUrlMapper;
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import it.unimi.dsi.fastutil.objects.Object2IntMaps;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.debugger.sourcemap.SourceFileResolver;
 
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 final class GwtFileUrlMapper extends FileUrlMapper {
-  private static final int DEFAULT_PORT_NUMBER = 9876;
-  private static final Key<Integer> PORT_KEY = Key.create("gwtCodeServerPort");
   private static final @NonNls String PATH_PREFIX = "/sourcemaps/";
 
   @Override
   public @NotNull List<Url> getUrls(@NotNull VirtualFile file, @NotNull Project project, @Nullable String currentAuthority) {
-    if (!FileTypeRegistry.getInstance().isFileOfType(file, JavaFileType.INSTANCE)) {
-      return Collections.emptyList();
-    }
-
-    Set<String> ports = new HashSet<>();
-    ports.add(String.valueOf(DEFAULT_PORT_NUMBER));
-    for (ProcessHandler processHandler : ExecutionManager.getInstance(project).getRunningProcesses()) {
-      Integer port = PORT_KEY.get(processHandler);
-      if (port != null) {
-        ports.add(String.valueOf(port));
-      }
-    }
-
-    return doCreateUrl(file, project, ports);
-  }
-
-  private static @NotNull List<Url> doCreateUrl(final @NotNull VirtualFile file, final @NotNull Project project, final Collection<String> ports) {
-    List<Url> urls = nonBlockingReadActionInSmartMode(project, () -> {
-      GwtModulesManager gwtModulesManager = GwtModulesManager.getInstance(project);
-      VirtualFile sourceRoot = ProjectRootManager.getInstance(project).getFileIndex().getSourceRootForFile(file);
-      if (sourceRoot == null || sourceRoot.getFileSystem() == StandardFileSystems.jar()) {
-        return Collections.emptyList();
-      }
-
-      List<GwtModule> gwtModules = gwtModulesManager.findGwtModulesByClientSourceFile(file);
-      if (gwtModules.isEmpty()) {
-        return Collections.emptyList();
-      }
-
-      String relativeUrlPath = VfsUtilCore.getRelativePath(file, sourceRoot, '/');
-      if (relativeUrlPath == null) {
-        return Collections.emptyList();
-      }
-
-      Url[] result = new Url[gwtModules.size() * ports.size()];
-      for (int i = 0; i < gwtModules.size(); i++) {
-        String path = PATH_PREFIX + gwtModules.get(i).getOutputName() + '/' + relativeUrlPath;
-        for (String port : ports) {
-          result[i] = Urls.newHttpUrl("localhost:" + port, path);
+    if (!FileTypeRegistry.getInstance().isFileOfType(file, JavaFileType.INSTANCE)) return List.of();
+    var urls = nonBlockingReadActionInSmartMode(project, () -> {
+      var root = classpathRoot(project, file);
+      if (root == null) return List.<Url>of();
+      String relative = VfsUtilCore.getRelativePath(file, root, '/');
+      if (relative == null) return List.<Url>of();
+      var manager = GwtModulesManager.getInstance(project);
+      var modules = allModules(project, manager);
+      var owners = modules.stream().filter(module -> ownsSource(project, module, file, relative)).toList();
+      if (owners.isEmpty()) return List.<Url>of();
+      var endpoints = GwtCodeServerUrls.get(project, currentAuthority);
+      Set<Url> result = new LinkedHashSet<>();
+      for (var module : modules) {
+        var ideaModule = module.getModule();
+        if (ideaModule != null && !visibleSource(project, ideaModule, file, relative)) continue;
+        if (owners.stream().noneMatch(owner -> manager.isInheritedOrSelf(module, owner))) continue;
+        for (String endpoint : endpoints) {
+          result.add(Urls.parseEncoded(endpoint + PATH_PREFIX + module.getOutputName() + '/' + relative));
         }
       }
-      return Arrays.asList(result);
+      return List.copyOf(result);
     }, GwtBundle.message("notification.content.gwt.file.mapping.is.not.possible.during.index.update"));
-    return urls == null ? Collections.emptyList() : urls;
+    return urls == null ? List.of() : urls;
   }
 
-  @Override
-  public @Nullable SourceFileResolver createSourceResolver(final @NotNull VirtualFile file, final @NotNull Project project) {
-    if (!FileTypeRegistry.getInstance().isFileOfType(file, JavaFileType.INSTANCE)) {
-      return null;
-    }
+  private static VirtualFile classpathRoot(Project project, VirtualFile file) {
+    var index = ProjectRootManager.getInstance(project).getFileIndex();
+    var source = index.getSourceRootForFile(file);
+    return source != null ? source : index.getClassRootForFile(file);
+  }
 
-    return nonBlockingReadActionInSmartMode(project, (Supplier<SourceFileResolver>)() -> {
-      VirtualFile sourceRoot = ProjectRootManager.getInstance(project).getFileIndex().getSourceRootForFile(file);
-      if (sourceRoot == null) {
-        return null;
+  private static boolean visibleSource(Project project, Module module, VirtualFile file, String relative) {
+    var scope = module.getModuleWithDependenciesAndLibrariesScope(true);
+    if (scope.contains(file)) return true;
+    var index = ProjectRootManager.getInstance(project).getFileIndex();
+    if (!index.isInLibrarySource(file)) return false;
+    for (var entry : index.getOrderEntriesForFile(file)) {
+      if (!(entry instanceof LibraryOrderEntry libraryEntry) || libraryEntry.getLibrary() == null) continue;
+      for (var root : libraryEntry.getLibrary().getFiles(OrderRootType.CLASSES)) {
+        var compiled = root.findFileByRelativePath(relative);
+        if (compiled != null && scope.contains(compiled)) return true;
       }
+    }
+    return false;
+  }
 
-      GwtModulesManager gwtModulesManager = GwtModulesManager.getInstance(project);
-      /* gwt code server run on module A.
-      A inherits module B.
-      Our current file belongs to module B.
+  private static boolean ownsSource(Project project, GwtModule module, VirtualFile file, String relative) {
+    if (module.isSourceFile(file) || module.isSuperSourceFile(file)) return true;
+    var index = ProjectRootManager.getInstance(project).getFileIndex();
+    if (!index.isInLibrarySource(file)) return false;
+    // Attached sources may omit .gwt.xml; use their own library's compiled GWT definition/resources.
+    for (var entry : index.getOrderEntriesForFile(file)) {
+      if (!(entry instanceof LibraryOrderEntry libraryEntry) || libraryEntry.getLibrary() == null) continue;
+      for (var root : libraryEntry.getLibrary().getFiles(OrderRootType.CLASSES)) {
+        if (!VfsUtilCore.isAncestor(root, module.getModuleFile(), false)) continue;
+        var compiledSource = root.findFileByRelativePath(relative);
+        if (compiledSource != null && (module.isSourceFile(compiledSource) || module.isSuperSourceFile(compiledSource))) return true;
+      }
+    }
+    return false;
+  }
 
-      So, actual:
-      http://localhost:9876/sourcemaps/A/com/jetbrains/upsource/frontend/application/client/views/feedView/FeedView.java
+  private static VirtualFile sourceView(Project project, VirtualFile file, String relative) {
+    var index = ProjectRootManager.getInstance(project).getFileIndex();
+    if (!index.isInLibraryClasses(file)) return file;
+    for (var entry : index.getOrderEntriesForFile(file)) {
+      if (!(entry instanceof LibraryOrderEntry libraryEntry) || libraryEntry.getLibrary() == null) continue;
+      for (var root : libraryEntry.getLibrary().getFiles(OrderRootType.SOURCES)) {
+        var source = root.findFileByRelativePath(relative);
+        if (source != null) return source;
+      }
+    }
+    return file;
+  }
 
-      expected:
-      http://localhost:9876/sourcemaps/B/com/jetbrains/upsource/frontend/application/client/views/feedView/FeedView.java
+  private static List<GwtModule> allModules(Project project, GwtModulesManager manager) {
+    List<GwtModule> result = new ArrayList<>();
+    var psiManager = PsiManager.getInstance(project);
+    for (var file : manager.getGwtModuleFiles(GlobalSearchScope.allScope(project))) {
+      var psi = psiManager.findFile(file);
+      var module = psi == null ? null : manager.getGwtModuleByXmlFile(psi);
+      if (module != null) result.add(module);
+    }
+    return result;
+  }
 
-      So, we must handle this case, not only library classes
-      */
-      String relativePath = gwtModulesManager.isUnderGwtModule(file) ? VfsUtilCore.getRelativePath(file, sourceRoot, '/') : null;
-      return relativePath == null ? null : new MySourceResolver(relativePath);
+  private static VirtualFile findSourceFile(Url url, Project project) {
+    String path = url.getPath();
+    if (!path.startsWith(PATH_PREFIX) || !path.endsWith(JavaFileType.DOT_DEFAULT_EXTENSION)) return null;
+    int separator = path.indexOf('/', PATH_PREFIX.length());
+    if (separator < 0) return null;
+    String outputName = path.substring(PATH_PREFIX.length(), separator);
+    String relative = path.substring(separator + 1);
+    if (relative.contains("\\") || Arrays.stream(relative.split("/", -1)).anyMatch(part -> part.isEmpty() || part.equals(".") || part.equals(".."))) return null;
+    return nonBlockingReadActionInSmartMode(project, () -> {
+      var manager = GwtModulesManager.getInstance(project);
+      var modules = allModules(project, manager);
+      for (var output : modules) {
+        if (!outputName.equals(output.getOutputName())) continue;
+        var module = output.getModule();
+        var scope = module == null ? null : module.getModuleWithDependenciesAndLibrariesScope(true);
+        for (var owner : modules) {
+          if (!manager.isInheritedOrSelf(output, owner)) continue;
+          var root = classpathRoot(project, owner.getModuleFile());
+          var file = root == null ? null : root.findFileByRelativePath(relative);
+          if (file != null && (scope == null || scope.contains(file)) &&
+              (owner.isSourceFile(file) || owner.isSuperSourceFile(file))) return sourceView(project, file, relative);
+        }
+      }
+      return null;
     }, GwtBundle.message("notification.content.gwt.file.mapping.is.not.possible.during.index.update"));
   }
 
@@ -198,11 +227,15 @@ final class GwtFileUrlMapper extends FileUrlMapper {
 
   @Override
   public @Nullable Navigatable getNavigatable(@NotNull Url url, @NotNull Project project, @Nullable Url requestor) {
+    var file = findSourceFile(url, project);
+    if (file != null) return ReadAction.computeBlocking(() -> PsiManager.getInstance(project).findFile(file));
     return findClass(url, project);
   }
 
   @Override
   public @Nullable VirtualFile getFile(@NotNull Url url, final @NotNull Project project, @Nullable Url requestor) {
+    var source = findSourceFile(url, project);
+    if (source != null) return source;
     PsiClass psiClass = findClass(url, project);
     if (psiClass == null) {
       return null;
@@ -219,31 +252,4 @@ final class GwtFileUrlMapper extends FileUrlMapper {
     }
   }
 
-  private static final class MySourceResolver implements SourceFileResolver {
-    private final String relativeUrlPath;
-
-    MySourceResolver(@NotNull String relativeUrlPath) {
-      this.relativeUrlPath = relativeUrlPath;
-    }
-
-    @Override
-    public int resolve(@NotNull Object2IntMap<Url> map) {
-      final AtomicInteger result = new AtomicInteger(-1);
-      for (Object2IntMap.Entry<Url> entry : Object2IntMaps.fastIterable(map)) {
-        String path = entry.getKey().getPath();
-        int pathLength = path.length();
-        int postfixLength = relativeUrlPath.length();
-        if (pathLength > postfixLength && path.charAt(pathLength - postfixLength - 1) == '/' && path.endsWith(relativeUrlPath)) {
-          result.set(entry.getIntValue());
-          break;
-        }
-      }
-      return result.get();
-    }
-
-    @Override
-    public int resolve(@NotNull List<String> rawSources) {
-      return -1;
-    }
-  }
 }
