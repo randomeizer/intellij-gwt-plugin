@@ -4,8 +4,10 @@ import org.randombits.intellij.gwt.facet.GwtFacet;
 import org.randombits.intellij.gwt.facet.GwtFacetConfiguration;
 import org.randombits.intellij.gwt.sdk.impl.GwtVersionImpl;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.externalSystem.service.project.IdeModifiableModelsProvider;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.roots.DependencyScope;
 import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
@@ -14,6 +16,7 @@ import com.intellij.util.execution.ParametersListUtil;
 import org.jdom.Element;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.idea.maven.importing.MavenRootModelAdapter;
 import org.jetbrains.idea.maven.model.MavenArtifact;
 import org.jetbrains.idea.maven.model.MavenArtifactInfo;
 import org.jetbrains.idea.maven.model.MavenRemoteRepository;
@@ -25,8 +28,9 @@ import org.randombits.intellij.gwt.jps.model.impl.sdk.GwtMavenSdkPaths;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class GwtCodehausFacetImporter extends GwtFacetImporter {
@@ -44,28 +48,50 @@ public class GwtCodehausFacetImporter extends GwtFacetImporter {
   public void resolve(Project project, MavenProject mavenProject,
                       MavenEmbedderWrapper embedder) throws MavenProcessCanceledException {
     super.resolve(project, mavenProject, embedder);
-    addSourcesDependencies(mavenProject, embedder, getConfig(mavenProject, "compileSourcesArtifacts"));
+    List<GwtMavenSourceArtifacts.SourceArtifact> sources = new ArrayList<>();
+    String pomUrl = mavenProject.getFile().getUrl();
+    List<MavenRemoteRepository> repos = mavenProject.getRemoteRepositories();
+    for (MavenArtifact artifact : sourceDependencies(mavenProject.getDependencies(), getConfig(mavenProject, "compileSourcesArtifacts"))) {
+      MavenArtifactInfo artifactInfo =
+        new MavenArtifactInfo(artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion(), "jar", "sources");
+      MavenArtifact source = embedder.resolve(artifactInfo, repos);
+      sources.add(GwtMavenSourceArtifacts.SourceArtifact.from(pomUrl, GwtMavenSourceArtifacts.coordinates(artifact), source,
+                                                           mavenProject.getLocalRepositoryPath().toFile()));
+    }
+    GwtMavenSourceArtifacts.getInstance(project).replace(pomUrl, sources);
   }
 
-  static void addSourcesDependencies(MavenProject mavenProject, MavenEmbedderWrapper embedder, Element compileSourcesArtifacts) throws MavenProcessCanceledException {
-    List<MavenRemoteRepository> repos = mavenProject.getRemoteRepositories();
+  static List<MavenArtifact> sourceDependencies(List<MavenArtifact> dependencies, @Nullable Element compileSourcesArtifacts) {
+    if (compileSourcesArtifacts == null) return List.of();
     List<Element> artifactTags = JDOMUtil.getChildren(compileSourcesArtifacts);
-    LinkedHashSet<MavenArtifact> toAdd = new LinkedHashSet<>();
+    Map<String, MavenArtifact> requested = new LinkedHashMap<>();
     for (Element artifactTag : artifactTags) {
       List<String> parts = StringUtil.split(artifactTag.getTextTrim(), ":");
       if (parts.size() < 2) continue;
       String groupId = parts.get(0);
       String artifactId = parts.get(1);
 
-      for (MavenArtifact artifact : mavenProject.getDependencies()) {
+      for (MavenArtifact artifact : dependencies) {
         if (artifact.getMavenId().equals(groupId, artifactId)) {
-          MavenArtifactInfo artifactInfo =
-            new MavenArtifactInfo(artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion(), "jar", "sources");
-          toAdd.add(embedder.resolve(artifactInfo, repos));
+          requested.putIfAbsent(GwtMavenSourceArtifacts.coordinates(artifact), artifact);
         }
       }
     }
-    mavenProject.addDependencies(toAdd);
+    return new ArrayList<>(requested.values());
+  }
+
+  @Override
+  protected void setupAdditionalDependencies(IdeModifiableModelsProvider modelsProvider, Module module, MavenRootModelAdapter rootModel,
+                                            MavenProject project) {
+    List<String> requested = sourceDependencies(project.getDependencies(), getConfig(project, "compileSourcesArtifacts"))
+      .stream().map(GwtMavenSourceArtifacts::coordinates).toList();
+    for (MavenArtifact source : GwtMavenSourceArtifacts.getInstance(module.getProject())
+      .getArtifacts(project.getFile().getUrl(), requested)) {
+      boolean alreadyDeclared = project.getDependencies().stream().anyMatch(dependency ->
+        source.getLibraryName().equals(dependency.getLibraryName())
+        && (dependency.getScope() == null || "compile".equals(dependency.getScope())));
+      if (!alreadyDeclared) rootModel.addLibraryDependency(source, DependencyScope.COMPILE, modelsProvider, project);
+    }
   }
 
   @Override

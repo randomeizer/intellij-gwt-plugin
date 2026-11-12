@@ -146,6 +146,7 @@ public abstract class GwtFacetImporter extends FacetImporter<GwtFacet, GwtFacetC
                                @NotNull MavenProjectChanges changes, @NotNull Map<MavenProject, String> mavenProjectToModuleName,
                                @NotNull List<MavenProjectsProcessorTask> postTasks) {
     MavenLog.LOG.debug("GwtFacetImporter.reimportFacet started");
+    setupAdditionalDependencies(modelsProvider, module, rootModel, project);
     TrackingUtil.trackActivity(module.getProject(), MavenActivityKey.INSTANCE, () -> {
       IdeModifiableModelsProviderImpl modelsProvider1 = new IdeModifiableModelsProviderImpl(module.getProject());
       DumbService.getInstance(module.getProject()).smartInvokeLater(() -> {
@@ -162,6 +163,10 @@ public abstract class GwtFacetImporter extends FacetImporter<GwtFacet, GwtFacetC
         MavenLog.LOG.debug("GwtFacetImporter.reimportFacet finished");
       });
     });
+  }
+
+  protected void setupAdditionalDependencies(IdeModifiableModelsProvider modelsProvider, Module module, MavenRootModelAdapter rootModel,
+                                            MavenProject project) {
   }
 
   protected void setupGwtCompilerOptions(GwtFacetConfiguration configuration, Module module, MavenProject project) {

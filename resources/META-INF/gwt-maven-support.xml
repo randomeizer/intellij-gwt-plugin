@@ -6,8 +6,12 @@
     <importer implementation="org.randombits.intellij.gwt.maven.GwtLtgtFacetImporter" order="after web"/>
     <importer implementation="org.randombits.intellij.gwt.maven.GwtLtgtModuleImporter" order="last"/>
 
-    <projectResolutionContributor implementation="org.randombits.intellij.gwt.maven.GwtCodehausMavenProjectResolutionContributor"/>
   </extensions>
+
+  <projectListeners>
+    <listener class="org.randombits.intellij.gwt.maven.GwtMavenProjectResolutionListener"
+              topic="org.jetbrains.idea.maven.project.MavenProjectsTree$Listener"/>
+  </projectListeners>
 
   <extensions defaultExtensionNs="org.randombits.intellij.gwt">
     <sdkType implementation="org.randombits.intellij.gwt.maven.GwtMavenSdkType"/>
