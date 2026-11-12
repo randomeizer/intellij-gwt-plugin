@@ -19,6 +19,7 @@ package org.randombits.intellij.gwt.make;
 import com.intellij.compiler.server.BuildManager;
 import com.intellij.openapi.application.PathManager;
 import com.intellij.openapi.module.Module;
+import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectUtil;
 import org.jetbrains.annotations.NotNull;
@@ -59,7 +60,10 @@ public final class GwtCompilerPaths {
 
   private static String getOutputDirectoryName(@NotNull Module module) {
     final String moduleName = module.getName();
-    final String modulePath = module.getModuleFilePath();
+    // Module file accessors are internal. Preserve the historical cache key for the
+    // conventional module filename using the supported directory and module identity.
+    final String moduleDirectory = ModuleUtilCore.getModuleDirPath(module);
+    final String modulePath = (moduleDirectory.isEmpty() ? "" : moduleDirectory + "/") + moduleName + ".iml";
     return moduleName.replace(' ', '_') + "." + Integer.toHexString(modulePath.hashCode());
   }
 
