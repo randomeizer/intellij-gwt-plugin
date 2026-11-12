@@ -10,6 +10,7 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.InetAddress;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -28,6 +29,7 @@ public final class RemoteUiTransport implements Disposable {
   private final Object myLock = new Object();
   private final int myFirstPort;
   private final int myPortAttempts;
+  private final InetAddress myBindAddress;
   private final BlockingQueue<RemoteUiRequest> myRequests = new LinkedBlockingQueue<>();
   private final Map<Class<?>, List<Consumer<RemoteUiResponse>>> myHandlers = new ConcurrentHashMap<>();
   private final AtomicBoolean myCloseRequested = new AtomicBoolean();
@@ -40,11 +42,16 @@ public final class RemoteUiTransport implements Disposable {
   private int myPort;
 
   RemoteUiTransport(int firstPort, int portAttempts) {
+    this(firstPort, portAttempts, null);
+  }
+
+  RemoteUiTransport(int firstPort, int portAttempts, InetAddress bindAddress) {
     if (firstPort < 0 || firstPort > 65535 || portAttempts < 1 || firstPort + (long)portAttempts - 1 > 65535) {
       throw new IllegalArgumentException("Invalid RemoteUI port range");
     }
     myFirstPort = firstPort;
     myPortAttempts = portAttempts;
+    myBindAddress = bindAddress;
   }
 
   public <T extends RemoteUiResponse> void registerHandler(Class<T> type, Consumer<? super T> handler) {
@@ -74,8 +81,8 @@ public final class RemoteUiTransport implements Disposable {
     IOException failure = null;
     for (int attempt = 0; attempt < myPortAttempts; attempt++) {
       try {
-        // Preserve the existing wildcard binding and consecutive port fallback.
-        return new ServerSocket(myFirstPort + attempt);
+        // A null address preserves the existing wildcard binding and consecutive port fallback.
+        return new ServerSocket(myFirstPort + attempt, 0, myBindAddress);
       }
       catch (IOException e) {
         failure = e;

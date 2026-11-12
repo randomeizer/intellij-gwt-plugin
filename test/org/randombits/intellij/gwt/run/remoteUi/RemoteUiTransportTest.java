@@ -36,7 +36,7 @@ public class RemoteUiTransportTest extends LightPlatformTestCase {
   }
 
   public void testFragmentedAndCoalescedFramesDispatchToEveryExactTypeHandlerInOrder() throws Exception {
-    myTransport = new RemoteUiTransport(0, 1);
+    myTransport = transport(0, 1);
     var received = new CopyOnWriteArrayList<String>();
     var done = new CountDownLatch(4);
     myTransport.registerHandler(RemoteUiResponse.class, response -> fail("Must dispatch by exact response type"));
@@ -69,7 +69,7 @@ public class RemoteUiTransportTest extends LightPlatformTestCase {
   }
 
   public void testRequestsQueuedBeforeConnectKeepTheirWireIdsAndOrder() throws Exception {
-    myTransport = new RemoteUiTransport(0, 1);
+    myTransport = transport(0, 1);
     myTransport.sendRequest(RemoteUiRequest.createDummyResponseRequest(9));
     myTransport.sendRequest(RemoteUiRequest.createRestartServerRequest());
     myTransport.sendRequest(RemoteUiRequest.createDummyResponseRequest(10));
@@ -85,7 +85,7 @@ public class RemoteUiTransportTest extends LightPlatformTestCase {
   }
 
   public void testUnknownResponseDoesNotPreventFollowingRequestDispatch() throws Exception {
-    myTransport = new RemoteUiTransport(0, 1);
+    myTransport = transport(0, 1);
     myTransport.registerHandler(InitializeResponse.class, response ->
       myTransport.sendRequest(RemoteUiRequest.createDummyResponseRequest(response.getMessageId())));
     try (var client = connect()) {
@@ -98,7 +98,7 @@ public class RemoteUiTransportTest extends LightPlatformTestCase {
   }
 
   public void testEndOfStreamStopsWorkersAndAllowsFreshRunOnSamePort() throws Exception {
-    myTransport = new RemoteUiTransport(0, 1);
+    myTransport = transport(0, 1);
     var childDisposed = new AtomicBoolean();
     Disposer.register(myTransport, () -> childDisposed.set(true));
     int port;
@@ -111,7 +111,7 @@ public class RemoteUiTransportTest extends LightPlatformTestCase {
     assertFalse("EOF must let queued console updates drain until owner disposal", childDisposed.get());
     myTransport.close();
     assertTrue(childDisposed.get());
-    myTransport = new RemoteUiTransport(port, 1);
+    myTransport = transport(port, 1);
     myTransport.registerHandler(InitializeResponse.class, response ->
       myTransport.sendRequest(RemoteUiRequest.createDummyResponseRequest(response.getMessageId())));
     try (var client = connect()) {
@@ -122,18 +122,18 @@ public class RemoteUiTransportTest extends LightPlatformTestCase {
   }
 
   public void testDisposeUnblocksPendingAcceptAndReleasesPort() throws Exception {
-    myTransport = new RemoteUiTransport(0, 1);
+    myTransport = transport(0, 1);
     myTransport.open();
     int port = myTransport.getPort();
     Disposer.dispose(myTransport);
     assertTrue(myTransport.awaitTermination(5, TimeUnit.SECONDS));
-    try (var rebound = new ServerSocket(port)) {
+    try (var rebound = new ServerSocket(port, 0, InetAddress.getLoopbackAddress())) {
       assertEquals(port, rebound.getLocalPort());
     }
   }
 
   public void testDisposeUnblocksPartialFrameReadAndWaitingWriter() throws Exception {
-    myTransport = new RemoteUiTransport(0, 1);
+    myTransport = transport(0, 1);
     try (var client = connect()) {
       client.getOutputStream().write(0x80);
       client.getOutputStream().flush();
@@ -155,8 +155,8 @@ public class RemoteUiTransportTest extends LightPlatformTestCase {
   }
 
   public void testBusyPortFallsBackToNextPortAndExhaustionFailsSynchronously() throws Exception {
-    try (var busy = new ServerSocket(0)) {
-      myTransport = new RemoteUiTransport(busy.getLocalPort(), 1);
+    try (var busy = new ServerSocket(0, 0, InetAddress.getLoopbackAddress())) {
+      myTransport = transport(busy.getLocalPort(), 1);
       try {
         myTransport.open();
         fail("Occupied range should fail synchronously");
@@ -167,10 +167,10 @@ public class RemoteUiTransportTest extends LightPlatformTestCase {
       myTransport.close();
       int next = busy.getLocalPort() + 1;
       if (next > 65535) return;
-      try (var probe = new ServerSocket(next)) {
+      try (var probe = new ServerSocket(next, 0, InetAddress.getLoopbackAddress())) {
         // Only select a range whose second port is available before checking fallback.
       }
-      myTransport = new RemoteUiTransport(busy.getLocalPort(), 2);
+      myTransport = transport(busy.getLocalPort(), 2);
       try (var client = connect()) {
         assertEquals(next, myTransport.getPort());
       }
@@ -178,7 +178,7 @@ public class RemoteUiTransportTest extends LightPlatformTestCase {
   }
 
   private void assertBadFrame(byte[] bytes) throws Exception {
-    myTransport = new RemoteUiTransport(0, 1);
+    myTransport = transport(0, 1);
     try (var client = connect()) {
       client.getOutputStream().write(bytes);
       client.getOutputStream().flush();
@@ -186,6 +186,11 @@ public class RemoteUiTransportTest extends LightPlatformTestCase {
       assertPeerDisconnected(client);
       assertTrue(myTransport.awaitTermination(5, TimeUnit.SECONDS));
     }
+  }
+
+  private static RemoteUiTransport transport(int firstPort, int attempts) {
+    // An exact loopback bind prevents ephemeral-port collisions with specific-address IDE listeners.
+    return new RemoteUiTransport(firstPort, attempts, InetAddress.getLoopbackAddress());
   }
 
   private Socket connect() throws Exception {

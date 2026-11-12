@@ -93,3 +93,9 @@ GWT_REMOTE_UI_SMOKE_JARS=/path/to/gwt-dev-2.12.2.jar:/path/to/gwt-dev-2.13.1.jar
 ```
 
 The environment value uses the platform path separator (`:` on macOS/Linux, `;` on Windows). Without it, the SDK-dependent test reports a skip; normal loopback and console coverage always runs. Gradle tracks the fixture files and optional SDK environment input; the explicit rerun is available when changing SDK JAR contents in place. Full release-gate results are recorded in [the publishing guide](marketplace-publishing.md).
+
+## Loopback fixture endpoint isolation
+
+A later full-suite run exposed a local test collision: an ephemeral wildcard listener selected port 64442 while a running IDEA instance owned `127.0.0.1:64442`. The client reached that HTTP listener; diagnostics showed the GWT worker still waiting in accept and the proxy selector reporting DIRECT. Explicit loopback binding for the protocol fixtures passed the same 2,000 malformed-frame repetition that reproduced the failure before the change. Temporary reflection/thread diagnostics and the stress prototype were removed.
+
+`RemoteUiTransport` accepts a package-local bind-address argument for these fixtures. Its original constructor still uses a null address, preserving production wildcard binding and the 7901–7920 range. Busy-port probes use the same loopback address as their clients. This is endpoint isolation for the tests, not evidence that a successful wildcard bind exclusively reserves every specific local address on this host.
