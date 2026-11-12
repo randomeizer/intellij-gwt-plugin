@@ -18,7 +18,6 @@ package org.randombits.intellij.gwt.run;
 import com.intellij.diagnostic.logging.LogConfigurationPanel;
 import com.intellij.execution.CantRunException;
 import com.intellij.execution.CommonProgramRunConfigurationParameters;
-import com.intellij.execution.ExecutionBundle;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.Executor;
 import com.intellij.execution.JavaRunConfigurationExtensionManager;
@@ -86,8 +85,8 @@ public class GwtRunConfiguration extends ModuleBasedConfiguration<JavaRunConfigu
   @Override
   public @NotNull SettingsEditor<? extends RunConfiguration> getConfigurationEditor() {
     SettingsEditorGroup<GwtRunConfiguration> group = new SettingsEditorGroup<>();
-    group.addEditor(ExecutionBundle.message("run.configuration.configuration.tab.title"), new GwtRunConfigurationEditor(getProject()));
-    group.addEditor(ExecutionBundle.message("logs.tab.title"), new LogConfigurationPanel<>());
+    group.addEditor(GwtBundle.message("run.configuration.tab.title"), new GwtRunConfigurationEditor(getProject()));
+    group.addEditor(GwtBundle.message("run.configuration.logs.tab.title"), new LogConfigurationPanel<>());
 
     JavaRunConfigurationExtensionManager.getInstance().appendEditors(this, group);
     return group;

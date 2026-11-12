@@ -44,8 +44,6 @@ import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SettingsEditor;
-import com.intellij.openapi.project.DumbModeBlockedFunctionality;
-import com.intellij.openapi.project.DumbModeBlockedFunctionalityCollector;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectRootManager;
@@ -54,7 +52,6 @@ import com.intellij.openapi.ui.ComponentWithBrowseButton;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.ui.TextComponentAccessor;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
-import com.intellij.openapi.ui.messages.MessagesService;
 import com.intellij.openapi.util.NlsSafe;
 import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.io.FileUtil;
@@ -72,8 +69,7 @@ import com.intellij.ui.SortedComboBoxModel;
 import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.dsl.listCellRenderer.BuilderKt;
-import com.intellij.ui.dsl.listCellRenderer.LcrJavaHelper;
-import com.intellij.ui.dsl.listCellRenderer.RendererPresentation;
+import com.intellij.ui.SimpleListCellRenderer;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
@@ -93,6 +89,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JPanel;
 import java.awt.BorderLayout;
 import java.awt.Insets;
@@ -258,7 +255,6 @@ public final class GwtRunConfigurationEditor extends SettingsEditor<GwtRunConfig
       @Override
       public void actionPerformed(ActionEvent e) {
         if (DumbService.isDumb(project)) {
-          DumbModeBlockedFunctionalityCollector.INSTANCE.logFunctionalityBlocked(project, DumbModeBlockedFunctionality.Other);
           Messages.showErrorDialog(myMainPanel,
                                    GwtBundle.message("message.text.gwt.module.chooser.isn.t.available.while.updating.indices"));
           return;
@@ -580,10 +576,13 @@ public final class GwtRunConfigurationEditor extends SettingsEditor<GwtRunConfig
       }
     });
 
-    myServerComboBox.setRenderer(LcrJavaHelper.create(
-      "",
-      value -> new RendererPresentation(value.getIcon(), value.getName())
-    ));
+    myServerComboBox.setRenderer(new SimpleListCellRenderer<GwtDevModeServer>() {
+      @Override
+      public void customize(JList<? extends GwtDevModeServer> list, GwtDevModeServer value, int index, boolean selected, boolean hasFocus) {
+        setText(value == null ? "" : value.getName());
+        setIcon(value == null ? null : value.getIcon());
+      }
+    });
     for (GwtDevModeServerProvider serverProvider : GwtDevModeServerProvider.EP_NAME.getExtensions()) {
       for (GwtDevModeServer server : serverProvider.getServers()) {
         myServerComboBox.addItem(server);
@@ -758,10 +757,8 @@ public final class GwtRunConfigurationEditor extends SettingsEditor<GwtRunConfig
         for (int i = 0; i < pairs.size(); i++) {
           gwtModules[i] = pairs.get(i).getFirst().getQualifiedName();
         }
-        int answer =
-          MessagesService.getInstance().showChooseDialog(myProject, myMainPanel, GwtBundle.message("choose.text.select.gwt.module"),
-                                                         GwtBundle.message("dialog.title.choose.gwt.module"), gwtModules,
-                                                         gwtModules[0], null);
+        ChooseGwtModuleDialog dialog = new ChooseGwtModuleDialog(myProject, gwtModules);
+        int answer = dialog.showAndGet() ? dialog.getSelectedIndex() : -1;
         if (answer >= 0) {
           pair = pairs.get(answer);
         }
